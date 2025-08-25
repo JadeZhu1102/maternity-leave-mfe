@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产假测算表单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-content {
+            padding: 32px;
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title::before {
+            content: "📋";
+            margin-right: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .required {
+            color: #ff4d4f;
+            margin-left: 4px;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .form-input:disabled {
+            background: #f5f5f5;
+            color: #8c8c8c;
+            cursor: not-allowed;
+        }
+
+        .form-select {
+            padding: 12px 16px;
+            border: 2px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .input-group .form-input {
+            padding-left: 40px;
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8c8c8c;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        .error-text {
+            font-size: 12px;
+            color: #ff4d4f;
+            margin-top: 4px;
+        }
+
+        .calculation-preview {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .preview-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #389e0d;
+            margin-bottom: 12px;
+        }
+
+        .preview-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .preview-item:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            font-size: 16px;
+            border-top: 1px solid #d9f7be;
+            padding-top: 8px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #595959;
+            border: 1px solid #d9d9d9;
+        }
+
+        .btn-secondary:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #73d13d;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 16px;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d9d9d9;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .step.active .step-number {
+            background: #1890ff;
+        }
+
+        .step.completed .step-number {
+            background: #52c41a;
+        }
+
+        .step-label {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+
+        .step.active .step-label {
+            color: #1890ff;
+            font-weight: 500;
+        }
+
+        .step.completed .step-label {
+            color: #52c41a;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-content {
+                padding: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">产假测算</h1>
+            <p class="form-subtitle">请填写以下信息进行产假测算</p>
+        </div>
+
+        <div class="form-content">
+            <div class="progress-steps">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">基本信息</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">产假信息</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">确认提交</div>
+                </div>
+            </div>
+
+            <form id="calculationForm">
+                <div class="form-section">
+                    <h2 class="section-title">基本信息</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                员工ID <span class="required">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-input" id="employeeId" placeholder="请输入员工ID" required>
+                                <span class="input-suffix" onclick="searchEmployee()">🔍</span>
+                            </div>
+                            <span class="help-text">输入员工ID自动获取员工信息</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-input" id="employeeName" placeholder="自动获取" disabled>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                所属组织 <span class="required">*</span>
+                            </label>
+                            <select class="form-select" id="organization" required>
+                                <option value="">请选择组织</option>
+                                <option value="shanghai">上海分公司</option>
+                                <option value="beijing">北京分公司</option>
+                                <option value="shenzhen">深圳分公司</option>
+                                <option value="guangzhou">广州分公司</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                所属城市 <span class="required">*</span>
+                            </label>
+                            <select class="form-select" id="city" required>
+                                <option value="">请选择城市</option>
+                                <option value="shanghai">上海</option>
+                                <option value="beijing">北京</option>
+                                <option value="shenzhen">深圳</option>
+                                <option value="guangzhou">广州</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">产假信息</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                预计产假开始时间 <span class="required">*</span>
+                            </label>
+                            <input type="date" class="form-input" id="startDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                过去12个月平均工资 <span class="required">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-prefix">¥</span>
+                                <input type="number" class="form-input" id="avgSalary" placeholder="8500" step="0.01" required>
+                            </div>
+                            <span class="help-text">如系统有工资数据将自动填入</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">特殊情况</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="difficultBirth" value="difficult">
+                                <span>难产</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="multipleBirth" value="multiple">
+                                <span>多胞胎</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="lateBirth" value="late">
+                                <span>晚育</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="prematureBirth" value="premature">
+                                <span>早产</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculation-preview" id="calculationPreview" style="display: none;">
+                    <div class="preview-title">📊 测算预览</div>
+                    <div class="preview-item">
+                        <span>产假开始日期:</span>
+                        <span id="previewStartDate">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span>产假结束日期:</span>
+                        <span id="previewEndDate">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span>产假总天数:</span>
+                        <span id="previewTotalDays">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span>应发津贴:</span>
+                        <span id="previewAllowance">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span>社保公积金:</span>
+                        <span id="previewInsurance">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span>总计金额:</span>
+                        <span id="previewTotal">-</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="goBack()">
+                ← 返回
+            </button>
+            <div style="display: flex; gap: 12px;">
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                    💾 保存草稿
+                </button>
+                <button type="button" class="btn btn-primary" onclick="calculate()">
+                    🧮 开始测算
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 表单数据
+        let formData = {
+            employeeId: '',
+            employeeName: '',
+            organization: '',
+            city: '',
+            startDate: '',
+            avgSalary: 0,
+            specialConditions: []
+        };
+
+        // 搜索员工信息
+        function searchEmployee() {
+            const employeeId = document.getElementById('employeeId').value;
+            if (!employeeId) {
+                alert('请先输入员工ID');
+                return;
+            }
+
+            // 模拟API调用
+            setTimeout(() => {
+                const mockData = {
+                    'L001': { name: '张小花', avgSalary: 8500 },
+                    'L002': { name: '王小明', avgSalary: 9200 },
+                    'L003': { name: '李小红', avgSalary: 7800 }
+                };
+
+                const employee = mockData[employeeId];
+                if (employee) {
+                    document.getElementById('employeeName').value = employee.name;
+                    document.getElementById('avgSalary').value = employee.avgSalary;
+                    showMessage('员工信息获取成功', 'success');
+                } else {
+                    document.getElementById('employeeName').value = '';
+                    document.getElementById('avgSalary').value = '';
+                    showMessage('未找到该员工信息，请手动填写', 'warning');
+                }
+            }, 500);
+        }
+
+        // 实时计算预览
+        function updatePreview() {
+            const startDate = document.getElementById('startDate').value;
+            const avgSalary = parseFloat(document.getElementById('avgSalary').value) || 0;
+            const city = document.getElementById('city').value;
+
+            if (!startDate || !avgSalary || !city) {
+                document.getElementById('calculationPreview').style.display = 'none';
+                return;
+            }
+
+            // 模拟计算逻辑
+            const baseDays = 98; // 基础产假天数
+            let additionalDays = 0;
+
+            // 检查特殊情况
+            if (document.getElementById('difficultBirth').checked) additionalDays += 15;
+            if (document.getElementById('multipleBirth').checked) additionalDays += 15;
+            if (document.getElementById('lateBirth').checked) additionalDays += 30;
+
+            const totalDays = baseDays + additionalDays;
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + totalDays);
+
+            // 计算津贴（简化计算）
+            const dailyAllowance = avgSalary / 30;
+            const totalAllowance = dailyAllowance * totalDays;
+            const insurance = avgSalary * 0.23 * (totalDays / 30); // 简化社保计算
+
+            // 更新预览
+            document.getElementById('previewStartDate').textContent = startDate;
+            document.getElementById('previewEndDate').textContent = endDate.toISOString().split('T')[0];
+            document.getElementById('previewTotalDays').textContent = totalDays + ' 天';
+            document.getElementById('previewAllowance').textContent = '¥' + totalAllowance.toFixed(2);
+            document.getElementById('previewInsurance').textContent = '¥' + insurance.toFixed(2);
+            document.getElementById('previewTotal').textContent = '¥' + (totalAllowance + insurance).toFixed(2);
+
+            document.getElementById('calculationPreview').style.display = 'block';
+        }
+
+        // 表单验证
+        function validateForm() {
+            const requiredFields = ['employeeId', 'organization', 'city', 'startDate', 'avgSalary'];
+            let isValid = true;
+
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const value = field.value.trim();
+                
+                if (!value) {
+                    field.style.borderColor = '#ff4d4f';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#d9d9d9';
+                }
+            });
+
+            return isValid;
+        }
+
+        // 开始测算
+        function calculate() {
+            if (!validateForm()) {
+                showMessage('请填写所有必填字段', 'error');
+                return;
+            }
+
+            // 收集表单数据
+            formData = {
+                employeeId: document.getElementById('employeeId').value,
+                employeeName: document.getElementById('employeeName').value,
+                organization: document.getElementById('organization').value,
+                city: document.getElementById('city').value,
+                startDate: document.getElementById('startDate').value,
+                avgSalary: parseFloat(document.getElementById('avgSalary').value),
+                specialConditions: getSpecialConditions()
+            };
+
+            // 显示加载状态
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 计算中...';
+            btn.disabled = true;
+
+            // 模拟API调用
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showCalculationResult();
+            }, 2000);
+        }
+
+        // 获取特殊情况
+        function getSpecialConditions() {
+            const conditions = [];
+            if (document.getElementById('difficultBirth').checked) conditions.push('难产');
+            if (document.getElementById('multipleBirth').checked) conditions.push('多胞胎');
+            if (document.getElementById('lateBirth').checked) conditions.push('晚育');
+            if (document.getElementById('prematureBirth').checked) conditions.push('早产');
+            return conditions;
+        }
+
+        // 显示计算结果
+        function showCalculationResult() {
+            const result = {
+                id: 'CALC_' + Date.now(),
+                ...formData,
+                endDate: document.getElementById('previewEndDate').textContent,
+                totalDays: parseInt(document.getElementById('previewTotalDays').textContent),
+                allowance: parseFloat(document.getElementById('previewAllowance').textContent.replace('¥', '')),
+                insurance: parseFloat(document.getElementById('previewInsurance').textContent.replace('¥', '')),
+                total: parseFloat(document.getElementById('previewTotal').textContent.replace('¥', ''))
+            };
+
+            // 保存到本地存储
+            const calculations = JSON.parse(localStorage.getItem('calculations') || '[]');
+            calculations.unshift(result);
+            localStorage.setItem('calculations', JSON.stringify(calculations));
+
+            showMessage('测算完成！结果已保存', 'success');
+            
+            // 3秒后跳转到结果页面
+            setTimeout(() => {
+                alert('跳转到测算结果页面\n\n' + JSON.stringify(result, null, 2));
+            }, 1000);
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            const draft = {
+                ...formData,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('calculationDraft', JSON.stringify(draft));
+            showMessage('草稿已保存', 'success');
+        }
+
+        // 返回
+        function goBack() {
+            if (confirm('确定要返回吗？未保存的数据将丢失。')) {
+                history.back();
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#52c41a',
+                warning: '#faad14',
+                error: '#ff4d4f',
+                info: '#1890ff'
+            };
+
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type]};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-size: 14px;
+                animation: slideIn 0.3s ease;
+            `;
+            messageDiv.textContent = message;
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载草稿
+            const draft = localStorage.getItem('calculationDraft');
+            if (draft) {
+                const draftData = JSON.parse(draft);
+                // 填充表单数据
+                Object.keys(draftData).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = draftData[key];
+                    }
+                });
+            }
+
+            // 实时预览更新
+            const inputs = ['startDate', 'avgSalary', 'city', 'difficultBirth', 'multipleBirth', 'lateBirth', 'prematureBirth'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', updatePreview);
+                    element.addEventListener('input', updatePreview);
+                }
+            });
+
+            // 员工ID输入监听
+            document.getElementById('employeeId').addEventListener('blur', searchEmployee);
+        });
+    </script>
+</body>
+</html>

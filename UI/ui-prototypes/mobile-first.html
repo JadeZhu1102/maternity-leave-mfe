@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产假测算 - 移动优先</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .mobile-container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 16px 16px;
+            position: relative;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-btn {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .notifications {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .greeting-section {
+            background: white;
+            margin: 16px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .greeting-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .greeting-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .quick-actions {
+            padding: 0 16px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .action-card:active {
+            transform: scale(0.98);
+        }
+
+        .action-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-right: 16px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-content {
+            flex: 1;
+        }
+
+        .action-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .action-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .action-arrow {
+            font-size: 20px;
+            color: #ccc;
+        }
+
+        .stats-overview {
+            background: white;
+            margin: 16px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stats-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .stats-title::before {
+            content: "📈";
+            margin-right: 8px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 20px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* 侧边菜单 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px 20px;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #f8f9fa;
+        }
+
+        .menu-item-icon {
+            font-size: 20px;
+            margin-right: 16px;
+            width: 24px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 响应式设计 */
+        @media (min-width: 768px) {
+            .mobile-container {
+                max-width: 768px;
+            }
+            
+            .quick-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                padding: 0 16px;
+            }
+            
+            .action-card {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .mobile-container {
+                max-width: 1024px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="header">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>🔋 85%</span>
+            </div>
+            <div class="header-content">
+                <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+                <div class="header-title">产假测算</div>
+                <div class="notifications">
+                    🔔
+                    <div class="notification-badge">3</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="greeting-section">
+            <div class="greeting-text">👋 你好，张三</div>
+            <div class="greeting-subtitle">今天是美好的一天，让我们开始工作吧</div>
+        </div>
+
+        <div class="quick-actions">
+            <div class="action-card" onclick="quickCalculation()">
+                <div class="action-icon">🧮</div>
+                <div class="action-content">
+                    <div class="action-title">快速测算</div>
+                    <div class="action-description">轻松几步完成计算</div>
+                </div>
+                <div class="action-arrow">›</div>
+            </div>
+
+            <div class="action-card" onclick="viewHistory()">
+                <div class="action-icon">📋</div>
+                <div class="action-content">
+                    <div class="action-title">我的记录</div>
+                    <div class="action-description">查看历史数据</div>
+                </div>
+                <div class="action-arrow">›</div>
+            </div>
+
+            <div class="action-card" onclick="viewReports()">
+                <div class="action-icon">📊</div>
+                <div class="action-content">
+                    <div class="action-title">数据报表</div>
+                    <div class="action-description">一目了然</div>
+                </div>
+                <div class="action-arrow">›</div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stats-title">本月概览</div>
+            <div class="stats-row">
+                <span class="stat-label">测算数量</span>
+                <span class="stat-value">23</span>
+            </div>
+            <div class="stats-row">
+                <span class="stat-label">已完成</span>
+                <span class="stat-value">20</span>
+            </div>
+            <div class="stats-row">
+                <span class="stat-label">完成率</span>
+                <span class="stat-value">87%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 87%"></div>
+            </div>
+        </div>
+
+        <div style="height: 100px;"></div> <!-- 底部导航间距 -->
+    </div>
+
+    <!-- 浮动操作按钮 -->
+    <div class="fab" onclick="quickCalculation()">+</div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">首页</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🧮</div>
+            <div class="nav-label">测算</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">📋</div>
+            <div class="nav-label">记录</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">我的</div>
+        </div>
+    </nav>
+
+    <!-- 侧边菜单 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">张</div>
+                <div>
+                    <div style="font-size: 18px; font-weight: 600;">张三</div>
+                    <div style="font-size: 14px; opacity: 0.8;">HR管理员</div>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item">
+                <div class="menu-item-icon">🏠</div>
+                <div>首页</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">🧮</div>
+                <div>产假测算</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">📋</div>
+                <div>历史记录</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">📊</div>
+                <div>数据报表</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">⚙️</div>
+                <div>系统设置</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">👥</div>
+                <div>员工管理</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">📋</div>
+                <div>政策维护</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-item-icon">📞</div>
+                <div>帮助支持</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+
+        function quickCalculation() {
+            alert('跳转到快速测算页面');
+        }
+
+        function viewHistory() {
+            alert('跳转到历史记录页面');
+        }
+
+        function viewReports() {
+            alert('跳转到数据报表页面');
+        }
+
+        // 底部导航切换
+        document.querySelectorAll('.nav-item').forEach((item, index) => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 侧边菜单项点击
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                alert('点击了菜单: ' + text);
+                closeSidebar();
+            });
+        });
+
+        // 触摸手势支持
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            const diffX = currentX - startX;
+            
+            // 从左边缘向右滑动打开菜单
+            if (startX < 50 && diffX > 100) {
+                toggleSidebar();
+            }
+            
+            // 在菜单打开时向左滑动关闭菜单
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('open') && diffX < -100) {
+                closeSidebar();
+            }
+        });
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.action-card, .stats-overview');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100 + 200);
+            });
+        });
+    </script>
+</body>
+</html>

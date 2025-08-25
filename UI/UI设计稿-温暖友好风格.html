@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产假测算系统 - 温暖友好风格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%);
+            color: #4C1D95;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* 导航栏 */
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #EC4899, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-menu a {
+            text-decoration: none;
+            color: #6B7280;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+        
+        .nav-menu a:hover {
+            color: #EC4899;
+            background: rgba(236, 72, 153, 0.1);
+        }
+        /* 卡片样式 */
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(236, 72, 153, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(236, 72, 153, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-header {
+            border-bottom: 2px solid rgba(236, 72, 153, 0.1);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4C1D95;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-title::before {
+            content: "🌸";
+            font-size: 1.2rem;
+        }
+        /* 表单样式 */
+        
+        .form-group {
+            margin-bottom: 2rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: #4C1D95;
+            font-size: 1.1rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid rgba(236, 72, 153, 0.2);
+            border-radius: 15px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #EC4899;
+            box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.1);
+            background: white;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid rgba(236, 72, 153, 0.2);
+            border-radius: 15px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #EC4899;
+            box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.1);
+        }
+        /* 按钮样式 */
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #EC4899, #8B5CF6);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6B7280, #9CA3AF);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #34D399, #10B981);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.3);
+        }
+        /* 网格布局 */
+        
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        /* 状态指示器 */
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+            color: #065F46;
+        }
+        
+        .status-warning {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            color: #92400E;
+        }
+        
+        .status-error {
+            background: linear-gradient(135deg, #FEE2E2, #FECACA);
+            color: #991B1B;
+        }
+        /* 表格样式 */
+        
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(236, 72, 153, 0.1);
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, #FDF2F8, #FCE7F3);
+            font-weight: 600;
+            color: #4C1D95;
+        }
+        
+        .table tr:hover {
+            background: rgba(236, 72, 153, 0.05);
+        }
+        /* 统计卡片 */
+        
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            box-shadow: 0 8px 32px rgba(236, 72, 153, 0.1);
+        }
+        
+        .stat-card h3 {
+            color: #4C1D95;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            background: linear-gradient(135deg, #EC4899, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        /* 响应式设计 */
+        
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .nav-menu {
+                display: none;
+            }
+        }
+        /* 装饰元素 */
+        
+        .decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        .decoration-1 {
+            top: 10%;
+            left: 5%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .decoration-2 {
+            top: 60%;
+            right: 10%;
+            animation: float 6s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">🌸 产假测算系统</div>
+            <ul class="nav-menu">
+                <li><a href="#dashboard">🏠 仪表板</a></li>
+                <li><a href="#calculation">🧮 产假测算</a></li>
+                <li><a href="#history">📋 历史记录</a></li>
+                <li><a href="#admin">⚙️ 信息管理</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 仪表板 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">仪表板概览</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="stat-card">
+                    <h3>今日测算</h3>
+                    <div class="stat-number">12</div>
+                    <span class="status status-success">✨ +15%</span>
+                </div>
+                <div class="stat-card">
+                    <h3>待处理</h3>
+                    <div class="stat-number">5</div>
+                    <span class="status status-warning">⏳ 需要审核</span>
+                </div>
+                <div class="stat-card">
+                    <h3>本月完成</h3>
+                    <div class="stat-number">156</div>
+                    <span class="status status-success">🎉 +8%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 产假测算表单 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">产假测算</h2>
+            </div>
+            <form>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">👤 LanID</label>
+                        <input type="text" class="form-input" value="ZH123456" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📅 预计产假开始时间</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🏢 所属组织</label>
+                        <select class="form-select">
+                            <option>请选择组织</option>
+                            <option>人力资源部</option>
+                            <option>技术部</option>
+                            <option>财务部</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🌆 所属城市</label>
+                        <select class="form-select">
+                            <option>请选择城市</option>
+                            <option>上海</option>
+                            <option>深圳</option>
+                            <option>北京</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">💰 过去12个月平均工资</label>
+                        <input type="number" class="form-input" placeholder="请输入平均工资">
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">🚀 开始测算</button>
+                    <button type="button" class="btn btn-secondary" style="margin-left: 1rem;">🔄 重置</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">历史记录</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>👤 LanID</th>
+                        <th>📅 开始时间</th>
+                        <th>📅 结束时间</th>
+                        <th>💰 应发津贴</th>
+                        <th>🏷️ 版本号</th>
+                        <th>📊 状态</th>
+                        <th>⚡ 操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ZH123456</td>
+                        <td>2024-03-01</td>
+                        <td>2024-08-31</td>
+                        <td>¥45,000</td>
+                        <td>v1.2</td>
+                        <td><span class="status status-success">✅ 已完成</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">👁️ 查看</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ZH789012</td>
+                        <td>2024-04-15</td>
+                        <td>2024-09-30</td>
+                        <td>¥52,000</td>
+                        <td>v1.1</td>
+                        <td><span class="status status-warning">⏳ 待审核</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">✏️ 编辑</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>华润集团产假测算管理系统 v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #003a8c 0%, #1890ff 100%);
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            margin-right: 24px;
+        }
+
+        .logo::before {
+            content: "🏛️";
+            margin-right: 8px;
+        }
+
+        .version {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .menubar {
+            background: #001529;
+            color: white;
+            padding: 8px 24px;
+            font-size: 14px;
+        }
+
+        .menu-items {
+            display: flex;
+            gap: 24px;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .toolbar {
+            background: #fafafa;
+            border-bottom: 1px solid #d9d9d9;
+            padding: 12px 24px;
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .toolbar-item {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-item:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .overview-section {
+            background: white;
+            border: 1px solid #d9d9d9;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            background: #fafafa;
+            border-bottom: 1px solid #d9d9d9;
+            padding: 12px 16px;
+            font-weight: bold;
+            color: #262626;
+        }
+
+        .section-content {
+            padding: 16px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            padding: 16px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .stat-title {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1890ff;
+        }
+
+        .data-table {
+            background: white;
+            border: 1px solid #d9d9d9;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th {
+            background: #fafafa;
+            border: 1px solid #d9d9d9;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            color: #262626;
+        }
+
+        .table td {
+            border: 1px solid #d9d9d9;
+            padding: 12px 8px;
+            background: white;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .table tbody tr:hover {
+            background: #e6f7ff;
+        }
+
+        .status-pending {
+            color: #fa8c16;
+            font-weight: bold;
+        }
+
+        .status-processing {
+            color: #1890ff;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #52c41a;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            border-radius: 2px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .period-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-control {
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 2px;
+            font-size: 14px;
+        }
+
+        .footer-info {
+            background: #fafafa;
+            border-top: 1px solid #d9d9d9;
+            padding: 8px 24px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                flex-direction: column;
+            }
+            
+            .menu-items {
+                flex-wrap: wrap;
+            }
+            
+            .toolbar {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">华润集团产假测算管理系统 <span class="version">v2.0</span></div>
+        </div>
+        <div class="header-right">
+            <span>2024-08-24 20:23</span>
+            <span>👤 HR-张三</span>
+        </div>
+    </header>
+
+    <nav class="menubar">
+        <div class="menu-items">
+            <div class="menu-item">文件(F)</div>
+            <div class="menu-item">编辑(E)</div>
+            <div class="menu-item">查看(V)</div>
+            <div class="menu-item">工具(T)</div>
+            <div class="menu-item">帮助(H)</div>
+        </div>
+    </nav>
+
+    <div class="toolbar">
+        <div class="toolbar-item">📊 测算</div>
+        <div class="toolbar-item">📋 记录</div>
+        <div class="toolbar-item">👥 员工</div>
+        <div class="toolbar-item">📋 政策</div>
+        <div class="toolbar-item">📊 报表</div>
+        <div class="toolbar-item">⚙️ 设置</div>
+        <div class="toolbar-item">📞 支持</div>
+    </div>
+
+    <div class="container">
+        <div class="overview-section">
+            <div class="section-header">系统概览</div>
+            <div class="section-content">
+                <div class="period-selector">
+                    <label>统计周期:</label>
+                    <select class="form-control">
+                        <option>2024年8月</option>
+                        <option>2024年7月</option>
+                        <option>2024年6月</option>
+                    </select>
+                    <button class="btn btn-primary">刷新</button>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-title">总测算数</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">本月新增</div>
+                        <div class="stat-value">23</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">待审核</div>
+                        <div class="stat-value">5</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">已完成</div>
+                        <div class="stat-value">151</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-table">
+            <div class="section-header">待处理事项</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>员工ID</th>
+                        <th>姓名</th>
+                        <th>部门</th>
+                        <th>申请日期</th>
+                        <th>预计开始</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>L10001</td>
+                        <td>王小明</td>
+                        <td>人事部</td>
+                        <td>08-20</td>
+                        <td>2024-09-01</td>
+                        <td><span class="status-pending">待审核</span></td>
+                        <td>
+                            <button class="btn">审核</button>
+                            <button class="btn">查看</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>L10002</td>
+                        <td>李小红</td>
+                        <td>财务部</td>
+                        <td>08-19</td>
+                        <td>2024-09-15</td>
+                        <td><span class="status-pending">待审核</span></td>
+                        <td>
+                            <button class="btn">审核</button>
+                            <button class="btn">查看</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>L10003</td>
+                        <td>张小花</td>
+                        <td>技术部</td>
+                        <td>08-18</td>
+                        <td>2024-08-25</td>
+                        <td><span class="status-processing">进行中</span></td>
+                        <td>
+                            <button class="btn">查看</button>
+                            <button class="btn">编辑</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>L10004</td>
+                        <td>赵小美</td>
+                        <td>市场部</td>
+                        <td>08-15</td>
+                        <td>2024-08-20</td>
+                        <td><span class="status-completed">已完成</span></td>
+                        <td>
+                            <button class="btn">查看</button>
+                            <button class="btn">导出</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>L10005</td>
+                        <td>孙小丽</td>
+                        <td>法务部</td>
+                        <td>08-12</td>
+                        <td>2024-08-18</td>
+                        <td><span class="status-completed">已完成</span></td>
+                        <td>
+                            <button class="btn">查看</button>
+                            <button class="btn">导出</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer-info">
+        华润集团产假测算管理系统 v2.0 | 技术支持: IT部门 | 服务热线: 400-888-8888
+    </div>
+
+    <script>
+        // 表格行点击效果
+        document.querySelectorAll('.table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                document.querySelectorAll('.table tbody tr').forEach(r => r.style.background = '');
+                this.style.background = '#e6f7ff';
+            });
+        });
+
+        // 工具栏点击事件
+        document.querySelectorAll('.toolbar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                alert('功能: ' + this.textContent);
+            });
+        });
+
+        // 菜单点击事件
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                alert('菜单: ' + this.textContent);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产假数据分析中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(22, 119, 255, 0.3);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo::before {
+            content: "📊";
+            margin-right: 12px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            background: #52c41a;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #1e2139 0%, #2a2d5a 100%);
+            border: 1px solid rgba(22, 119, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #1677ff, #722ed1, #eb2f96);
+        }
+
+        .metric-title {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-bottom: 12px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .metric-up {
+            color: #52c41a;
+        }
+
+        .metric-down {
+            color: #ff4d4f;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #1e2139 0%, #2a2d5a 100%);
+            border: 1px solid rgba(22, 119, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+        }
+
+        .chart-title::before {
+            content: "📈";
+            margin-right: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .realtime-section {
+            background: linear-gradient(135deg, #1e2139 0%, #2a2d5a 100%);
+            border: 1px solid rgba(22, 119, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .realtime-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+        }
+
+        .realtime-title::before {
+            content: "📋";
+            margin-right: 8px;
+        }
+
+        .realtime-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .realtime-table th {
+            background: rgba(22, 119, 255, 0.1);
+            color: #8c8c8c;
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(22, 119, 255, 0.2);
+        }
+
+        .realtime-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .realtime-table tbody tr:hover {
+            background: rgba(22, 119, 255, 0.1);
+        }
+
+        .status-icon {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background: #52c41a;
+        }
+
+        .status-processing {
+            background: #1677ff;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-pending {
+            background: #faad14;
+        }
+
+        .time-column {
+            font-family: 'Courier New', monospace;
+            color: #52c41a;
+        }
+
+        .amount-column {
+            font-weight: 600;
+            color: #1677ff;
+        }
+
+        .floating-stats {
+            position: fixed;
+            top: 50%;
+            right: 24px;
+            transform: translateY(-50%);
+            background: rgba(30, 33, 57, 0.95);
+            border: 1px solid rgba(22, 119, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .floating-stat {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .floating-stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .floating-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1677ff;
+        }
+
+        .floating-stat-label {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .floating-stats {
+                position: relative;
+                right: auto;
+                top: auto;
+                transform: none;
+                margin-bottom: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">产假数据分析中心</div>
+        <div class="header-right">
+            <div class="refresh-indicator">
+                <div class="refresh-dot"></div>
+                <span>实时更新</span>
+            </div>
+            <span>👤 数据分析师</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">本年度总计</div>
+                <div class="metric-value">156</div>
+                <div class="metric-change metric-up">
+                    📈 +12% 较去年同期
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">本月度新增</div>
+                <div class="metric-value">23</div>
+                <div class="metric-change metric-up">
+                    📈 +8% 较上月
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">本周处理</div>
+                <div class="metric-value">5</div>
+                <div class="metric-change metric-down">
+                    📉 -2% 较上周
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">平均处理时间</div>
+                <div class="metric-value">2.3</div>
+                <div class="metric-change">
+                    <span style="color: #8c8c8c;">天</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">月度趋势分析</div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">部门分布统计</div>
+                <div class="chart-container">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="realtime-section">
+            <div class="realtime-title">实时数据流</div>
+            <table class="realtime-table">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>事件</th>
+                        <th>员工ID</th>
+                        <th>部门</th>
+                        <th>金额</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody id="realtimeData">
+                    <tr>
+                        <td class="time-column">20:23:15</td>
+                        <td>测算完成</td>
+                        <td>L001</td>
+                        <td>技术部</td>
+                        <td class="amount-column">¥15,600</td>
+                        <td><span class="status-icon status-success"></span>完成</td>
+                    </tr>
+                    <tr>
+                        <td class="time-column">20:22:48</td>
+                        <td>政策更新</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><span class="status-icon status-processing"></span>处理中</td>
+                    </tr>
+                    <tr>
+                        <td class="time-column">20:21:32</td>
+                        <td>新增申请</td>
+                        <td>L002</td>
+                        <td>销售部</td>
+                        <td class="amount-column">¥12,800</td>
+                        <td><span class="status-icon status-pending"></span>待审核</td>
+                    </tr>
+                    <tr>
+                        <td class="time-column">20:20:15</td>
+                        <td>数据导入</td>
+                        <td>-</td>
+                        <td>人事部</td>
+                        <td>-</td>
+                        <td><span class="status-icon status-success"></span>完成</td>
+                    </tr>
+                    <tr>
+                        <td class="time-column">20:19:03</td>
+                        <td>测算完成</td>
+                        <td>L003</td>
+                        <td>财务部</td>
+                        <td class="amount-column">¥18,200</td>
+                        <td><span class="status-icon status-success"></span>完成</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="floating-stats">
+        <div class="floating-stat">
+            <div class="floating-stat-value">98.5%</div>
+            <div class="floating-stat-label">系统可用性</div>
+        </div>
+        <div class="floating-stat">
+            <div class="floating-stat-value">1.2s</div>
+            <div class="floating-stat-label">平均响应</div>
+        </div>
+        <div class="floating-stat">
+            <div class="floating-stat-value">245</div>
+            <div class="floating-stat-label">在线用户</div>
+        </div>
+    </div>
+
+    <script>
+        // 月度趋势图
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'],
+                datasets: [{
+                    label: '产假申请数',
+                    data: [12, 19, 15, 25, 22, 18, 28, 23],
+                    borderColor: '#1677ff',
+                    backgroundColor: 'rgba(22, 119, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: '完成数',
+                    data: [10, 18, 14, 23, 20, 17, 26, 20],
+                    borderColor: '#52c41a',
+                    backgroundColor: 'rgba(82, 196, 26, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#8c8c8c'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#8c8c8c'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 部门分布图
+        const deptCtx = document.getElementById('departmentChart').getContext('2d');
+        new Chart(deptCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['技术部', '销售部', '人事部', '财务部', '市场部'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        '#1677ff',
+                        '#722ed1',
+                        '#eb2f96',
+                        '#faad14',
+                        '#52c41a'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+
+        // 实时数据更新模拟
+        function addRealtimeData() {
+            const tbody = document.getElementById('realtimeData');
+            const events = ['测算完成', '新增申请', '政策更新', '数据导入', '审核通过'];
+            const departments = ['技术部', '销售部', '人事部', '财务部', '市场部'];
+            const statuses = [
+                { icon: 'status-success', text: '完成' },
+                { icon: 'status-processing', text: '处理中' },
+                { icon: 'status-pending', text: '待审核' }
+            ];
+
+            const now = new Date();
+            const timeStr = now.toTimeString().substr(0, 8);
+            const event = events[Math.floor(Math.random() * events.length)];
+            const dept = departments[Math.floor(Math.random() * departments.length)];
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const amount = event === '测算完成' ? `¥${(Math.random() * 20000 + 10000).toFixed(0)}` : '-';
+            const empId = event.includes('测算') || event.includes('申请') ? `L${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}` : '-';
+
+            const newRow = tbody.insertRow(0);
+            newRow.innerHTML = `
+                <td class="time-column">${timeStr}</td>
+                <td>${event}</td>
+                <td>${empId}</td>
+                <td>${dept}</td>
+                <td class="amount-column">${amount}</td>
+                <td><span class="status-icon ${status.icon}"></span>${status.text}</td>
+            `;
+
+            // 保持最多10行数据
+            if (tbody.rows.length > 10) {
+                tbody.deleteRow(-1);
+            }
+        }
+
+        // 每5秒添加新数据
+        setInterval(addRealtimeData, 5000);
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.metric-card, .chart-card, .realtime-section');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

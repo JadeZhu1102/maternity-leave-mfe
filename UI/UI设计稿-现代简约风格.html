@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产假测算系统 - 现代简约风格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #F8FAFC;
+            color: #1F2937;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* 导航栏 */
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2563EB;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-menu a {
+            text-decoration: none;
+            color: #6B7280;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-menu a:hover {
+            color: #2563EB;
+        }
+        /* 卡片样式 */
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1F2937;
+        }
+        /* 表单样式 */
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: white;
+        }
+        /* 按钮样式 */
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #2563EB;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1D4ED8;
+        }
+        
+        .btn-secondary {
+            background-color: #6B7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4B5563;
+        }
+        
+        .btn-success {
+            background-color: #10B981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        /* 网格布局 */
+        
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        /* 状态指示器 */
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .status-warning {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .status-error {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        /* 表格样式 */
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .table th {
+            background-color: #F9FAFB;
+            font-weight: 600;
+            color: #374151;
+        }
+        /* 响应式设计 */
+        
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .nav-menu {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">产假测算系统</div>
+            <ul class="nav-menu">
+                <li><a href="#dashboard">仪表板</a></li>
+                <li><a href="#calculation">产假测算</a></li>
+                <li><a href="#history">历史记录</a></li>
+                <li><a href="#admin">信息管理</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 仪表板 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">仪表板</h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h3>今日测算</h3>
+                    <p style="font-size: 2rem; color: #2563EB; margin: 1rem 0;">12</p>
+                    <span class="status status-success">+15%</span>
+                </div>
+                <div class="card">
+                    <h3>待处理</h3>
+                    <p style="font-size: 2rem; color: #F59E0B; margin: 1rem 0;">5</p>
+                    <span class="status status-warning">需要审核</span>
+                </div>
+                <div class="card">
+                    <h3>本月完成</h3>
+                    <p style="font-size: 2rem; color: #10B981; margin: 1rem 0;">156</p>
+                    <span class="status status-success">+8%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 产假测算表单 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">产假测算</h2>
+            </div>
+            <form>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">LanID</label>
+                        <input type="text" class="form-input" value="ZH123456" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">预计产假开始时间</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属组织</label>
+                        <select class="form-select">
+                            <option>请选择组织</option>
+                            <option>人力资源部</option>
+                            <option>技术部</option>
+                            <option>财务部</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属城市</label>
+                        <select class="form-select">
+                            <option>请选择城市</option>
+                            <option>上海</option>
+                            <option>深圳</option>
+                            <option>北京</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">过去12个月平均工资</label>
+                        <input type="number" class="form-input" placeholder="请输入平均工资">
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">开始测算</button>
+                    <button type="button" class="btn btn-secondary" style="margin-left: 1rem;">重置</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">历史记录</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>LanID</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>应发津贴</th>
+                        <th>版本号</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ZH123456</td>
+                        <td>2024-03-01</td>
+                        <td>2024-08-31</td>
+                        <td>¥45,000</td>
+                        <td>v1.2</td>
+                        <td><span class="status status-success">已完成</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">查看</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ZH789012</td>
+                        <td>2024-04-15</td>
+                        <td>2024-09-30</td>
+                        <td>¥52,000</td>
+                        <td>v1.1</td>
+                        <td><span class="status status-warning">待审核</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">编辑</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
