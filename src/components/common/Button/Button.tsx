@@ -40,36 +40,76 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  // 基础样式类
+  // 基础样式类 - 主题化版本
   const baseClasses = [
+    'theme-button',
     'inline-flex items-center justify-center',
-    'font-medium rounded-lg transition-all duration-200',
-    'focus:outline-none focus:ring-2 focus:ring-offset-2',
-    'disabled:opacity-50 disabled:cursor-not-allowed'
+    'font-semibold rounded-xl transition-all duration-300',
+    'focus:outline-none focus:ring-4 focus:ring-offset-2',
+    'disabled:opacity-50 disabled:cursor-not-allowed',
+    'shadow-lg hover:shadow-xl transform hover:scale-105',
+    'active:scale-95'
   ];
 
-  // 变体样式映射
-  const variantClasses: Record<ComponentVariant, string> = {
-    primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500',
-    secondary: 'bg-secondary-100 hover:bg-secondary-200 text-secondary-900 focus:ring-secondary-500',
-    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    warning: 'bg-yellow-600 hover:bg-yellow-700 text-white focus:ring-yellow-500',
-    error: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    info: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300 focus:ring-gray-500'
+  // 获取主题化样式
+  const getThemeStyles = (variant: ComponentVariant) => {
+    const styles: Record<string, React.CSSProperties> = {
+      primary: {
+        background: 'var(--gradient-primary)',
+        color: 'var(--color-text-inverse)',
+        border: '2px solid transparent',
+        boxShadow: 'var(--shadow-lg)'
+      },
+      secondary: {
+        background: 'var(--color-surface)',
+        color: 'var(--color-primary)',
+        border: '2px solid var(--color-primary)',
+        boxShadow: 'var(--shadow-md)'
+      },
+      success: {
+        background: 'var(--color-success)',
+        color: 'var(--color-text-inverse)',
+        border: '2px solid transparent',
+        boxShadow: 'var(--shadow-lg)'
+      },
+      warning: {
+        background: 'var(--color-warning)',
+        color: 'var(--color-text-inverse)',
+        border: '2px solid transparent',
+        boxShadow: 'var(--shadow-lg)'
+      },
+      error: {
+        background: 'var(--color-error)',
+        color: 'var(--color-text-inverse)',
+        border: '2px solid transparent',
+        boxShadow: 'var(--shadow-lg)'
+      },
+      info: {
+        background: 'var(--color-info)',
+        color: 'var(--color-text-inverse)',
+        border: '2px solid transparent',
+        boxShadow: 'var(--shadow-lg)'
+      },
+      ghost: {
+        background: 'transparent',
+        color: 'var(--color-text-secondary)',
+        border: '2px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)'
+      }
+    };
+    return styles[variant] || styles.primary;
   };
 
   // 尺寸样式映射
   const sizeClasses: Record<ComponentSize, string> = {
-    small: 'px-3 py-1.5 text-sm',
-    medium: 'px-4 py-2 text-base',
-    large: 'px-6 py-3 text-lg'
+    small: 'px-4 py-2 text-sm min-h-[36px]',
+    medium: 'px-6 py-3 text-base min-h-[44px]',
+    large: 'px-8 py-4 text-lg min-h-[52px]'
   };
 
   // 组合所有样式类
   const buttonClasses = [
     ...baseClasses,
-    variantClasses[variant],
     sizeClasses[size],
     fullWidth ? 'w-full' : '',
     className
@@ -78,6 +118,10 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={buttonClasses}
+      style={{
+        ...getThemeStyles(variant),
+        ...(disabled || loading ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+      }}
       disabled={disabled || loading}
       {...props}
     >
