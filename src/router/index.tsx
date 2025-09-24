@@ -13,6 +13,7 @@ import { CompanySettings } from '../pages/admin/CompanySettings';
 import { UserManagement } from '../pages/admin/UserManagement';
 import { CalculationHistory } from '../pages/CalculationHistory';
 import { Profile } from '../pages/Profile';
+import SystemSettings from '../pages/settings';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { AdminRoute } from '../components/auth/AdminRoute';
 
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <Profile />,
+      },
+      {
+        path: 'settings',
+        element: <SystemSettings />,
       },
       {
         path: 'admin',

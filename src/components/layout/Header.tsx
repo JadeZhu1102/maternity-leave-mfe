@@ -169,9 +169,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                   <UserIcon className="mr-3 h-4 w-4" />
                   个人资料
                 </a>
-                <button
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex w-full items-center px-4 py-2 text-sm transition-colors"
+                <a
+                  href="/settings"
+                  className="flex w-full items-center px-4 py-2 text-sm transition-colors no-underline"
                   style={{ color: 'var(--color-text-secondary)' }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = 'var(--color-hover)';
@@ -181,10 +181,11 @@ export function Header({ onMenuClick }: HeaderProps) {
                     e.currentTarget.style.backgroundColor = 'transparent';
                     e.currentTarget.style.color = 'var(--color-text-secondary)';
                   }}
+                  onClick={() => setUserMenuOpen(false)}
                 >
                   <Cog6ToothIcon className="mr-3 h-4 w-4" />
                   系统设置
-                </button>
+                </a>
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center px-4 py-2 text-sm transition-colors"

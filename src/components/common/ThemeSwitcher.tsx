@@ -8,8 +8,17 @@ import { useTheme, ThemeType } from '../../contexts/ThemeContext';
 import { cn } from '../../utils/cn';
 
 export function ThemeSwitcher() {
-  const { currentTheme, setTheme, themes } = useTheme();
+  const { currentTheme, setTheme, themes, theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // If theme data isn't loaded yet, show a loading state
+  if (!theme || !themes || !currentTheme) {
+    return (
+      <div className="px-4 py-2 rounded-lg bg-white/10 animate-pulse">
+        <div className="w-24 h-6 rounded bg-white/20"></div>
+      </div>
+    );
+  }
 
   const handleThemeChange = (themeId: ThemeType) => {
     setTheme(themeId);
@@ -42,7 +51,7 @@ export function ThemeSwitcher() {
         }}
       >
         <span className="text-lg">{getThemeIcon(currentTheme)}</span>
-        <span>{themes[currentTheme].name}</span>
+        <span>{theme?.name || currentTheme}</span>
         <svg 
           className={cn(
             "w-4 h-4 transition-transform duration-200",

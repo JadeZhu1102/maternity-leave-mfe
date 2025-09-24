@@ -39,6 +39,18 @@ export function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentCalculations, setRecentCalculations] = useState<RecentCalculation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Add a safe way to access theme colors with fallbacks
+  const getThemeColor = (colorPath: string, fallback = '#000000') => {
+    if (!theme?.colors) return fallback;
+    const path = colorPath.split('.');
+    let value: any = theme;
+    for (const key of path) {
+      value = value?.[key];
+      if (value === undefined) return fallback;
+    }
+    return value || fallback;
+  };
 
   const isAdmin = hasRole('ADMIN') || hasRole('SUPER_ADMIN');
 
@@ -148,14 +160,17 @@ export function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" text="加载仪表盘数据..." />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="text-gray-500 dark:text-gray-400">加载中...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen" style={{ backgroundColor: getThemeColor('colors.background', '#f9fafb') }}>
       {/* 主题装饰元素 */}
       <div className="theme-decoration theme-decoration-1" />
       <div className="theme-decoration theme-decoration-2" />
@@ -168,11 +183,11 @@ export function Dashboard() {
             <div>
               <h1 
                 className="text-2xl font-bold mb-2"
-                style={{ color: 'var(--color-text)' }}
+                style={{ color: getThemeColor('colors.text', '#111827') }}
               >
                 {getThemeIcon()} 欢迎回来，{user?.name}！
               </h1>
-              <p style={{ color: 'var(--color-text-secondary)' }}>
+              <p style={{ color: getThemeColor('colors.textSecondary', '#6b7280') }}>
                 今天是 {new Date().toLocaleDateString('zh-CN', {
                   year: 'numeric',
                   month: 'long',
@@ -183,7 +198,7 @@ export function Dashboard() {
             </div>
             <div 
               className="text-6xl opacity-20"
-              style={{ color: 'var(--color-primary)' }}
+              style={{ color: getThemeColor('colors.primary', '#3b82f6') }}
             >
               {getThemeIcon()}
             </div>
@@ -200,8 +215,8 @@ export function Dashboard() {
                     <div 
                       className="p-3 rounded-md"
                       style={{ 
-                        backgroundColor: `${theme.colors.primary}20`,
-                        color: theme.colors.primary
+                        backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}20`,
+                        color: getThemeColor('colors.primary', '#3b82f6')
                       }}
                     >
                       <stat.icon className="h-6 w-6" />
@@ -246,8 +261,8 @@ export function Dashboard() {
                   to={action.href}
                   className="group relative rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1"
                   style={{ 
-                    backgroundColor: `${theme.colors.primary}08`,
-                    border: `1px solid ${theme.colors.border}`,
+                    backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}08`,
+                    border: `1px solid ${getThemeColor('colors.border', '#e5e7eb')}`,
                     backdropFilter: 'blur(10px)'
                   }}
                 >
@@ -255,8 +270,8 @@ export function Dashboard() {
                     <span 
                       className="rounded-xl inline-flex p-3 ring-4 ring-white shadow-lg"
                       style={{ 
-                        backgroundColor: `${theme.colors.primary}15`,
-                        color: theme.colors.primary
+                        backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}15`,
+                        color: getThemeColor('colors.primary', '#3b82f6')
                       }}
                     >
                       <action.icon className="h-6 w-6" aria-hidden="true" />

@@ -7,42 +7,57 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type ThemeType = 'fresh' | 'modern' | 'tech' | 'warm';
 
+interface ColorPalette {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+  success: string;
+  warning: string;
+  error: string;
+  [key: string]: string; // Index signature for dynamic access
+}
+
+interface ThemeGradients {
+  primary: string;
+  background: string;
+  card: string;
+  [key: string]: string; // Index signature for dynamic access
+}
+
+interface ThemeShadows {
+  small: string;
+  medium: string;
+  large: string;
+  [key: string]: string; // Index signature for dynamic access
+}
+
+interface BorderRadius {
+  small: string;
+  medium: string;
+  large: string;
+  [key: string]: string; // Index signature for dynamic access
+}
+
+interface ThemeFonts {
+  primary: string;
+  secondary: string;
+  [key: string]: string; // Index signature for dynamic access
+}
+
 export interface ThemeConfig {
   id: ThemeType;
   name: string;
   description: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-    success: string;
-    warning: string;
-    error: string;
-  };
-  gradients: {
-    primary: string;
-    background: string;
-    card: string;
-  };
-  shadows: {
-    small: string;
-    medium: string;
-    large: string;
-  };
-  borderRadius: {
-    small: string;
-    medium: string;
-    large: string;
-  };
-  fonts: {
-    primary: string;
-    secondary: string;
-  };
+  colors: ColorPalette;
+  gradients: ThemeGradients;
+  shadows: ThemeShadows;
+  borderRadius: BorderRadius;
+  fonts: ThemeFonts;
 }
 
 // 主题配置
@@ -206,11 +221,61 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// 默认主题配置
+const defaultTheme: ThemeConfig = {
+  id: 'fresh',
+  name: '默认主题',
+  description: '系统默认主题',
+  colors: {
+    primary: '#3b82f6',
+    secondary: '#6366f1',
+    accent: '#8b5cf6',
+    background: '#f9fafb',
+    surface: '#ffffff',
+    text: '#111827',
+    textSecondary: '#6b7280',
+    border: '#e5e7eb',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
+  },
+  gradients: {
+    primary: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+    background: '#f9fafb',
+    card: '#ffffff'
+  },
+  shadows: {
+    small: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    medium: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    large: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)'
+  },
+  borderRadius: {
+    small: '0.375rem',
+    medium: '0.5rem',
+    large: '0.75rem'
+  },
+  fonts: {
+    primary: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    secondary: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+  }
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>(() => {
-    const saved = localStorage.getItem('app-theme');
-    return (saved as ThemeType) || 'fresh';
-  });
+  const [themeReady, setThemeReady] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('fresh');
+  
+  // 初始化主题
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('app-theme');
+      const initialTheme = saved && themes[saved as ThemeType] ? saved as ThemeType : 'fresh';
+      setCurrentTheme(initialTheme);
+      setThemeReady(true);
+    } catch (error) {
+      console.error('Failed to initialize theme:', error);
+      setThemeReady(true); // Continue with default theme even if there's an error
+    }
+  }, []);
 
   const setTheme = (theme: ThemeType) => {
     setCurrentTheme(theme);
@@ -222,31 +287,44 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const theme = themes[currentTheme];
     const root = document.documentElement;
 
-    // 设置CSS变量
-    root.style.setProperty('--color-primary', theme.colors.primary);
-    root.style.setProperty('--color-secondary', theme.colors.secondary);
-    root.style.setProperty('--color-accent', theme.colors.accent);
-    root.style.setProperty('--color-text', theme.colors.text);
-    root.style.setProperty('--color-text-secondary', theme.colors.textSecondary);
-    root.style.setProperty('--color-border', theme.colors.border);
-    root.style.setProperty('--color-success', theme.colors.success);
-    root.style.setProperty('--color-warning', theme.colors.warning);
-    root.style.setProperty('--color-error', theme.colors.error);
+    if (!theme || !theme.colors) {
+      console.error('Invalid theme configuration:', theme);
+      return;
+    }
 
-    root.style.setProperty('--gradient-primary', theme.gradients.primary);
-    root.style.setProperty('--gradient-background', theme.gradients.background);
-    root.style.setProperty('--gradient-card', theme.gradients.card);
+    // 设置颜色变量
+    const { colors } = theme;
+    Object.entries(colors).forEach(([key, value]) => {
+      root.style.setProperty(`--color-${key}`, value);
+    });
 
-    root.style.setProperty('--shadow-small', theme.shadows.small);
-    root.style.setProperty('--shadow-medium', theme.shadows.medium);
-    root.style.setProperty('--shadow-large', theme.shadows.large);
+    // 设置渐变
+    if (theme.gradients) {
+      Object.entries(theme.gradients).forEach(([key, value]) => {
+        root.style.setProperty(`--gradient-${key}`, value);
+      });
+    }
 
-    root.style.setProperty('--border-radius-small', theme.borderRadius.small);
-    root.style.setProperty('--border-radius-medium', theme.borderRadius.medium);
-    root.style.setProperty('--border-radius-large', theme.borderRadius.large);
+    // 设置阴影
+    if (theme.shadows) {
+      Object.entries(theme.shadows).forEach(([key, value]) => {
+        root.style.setProperty(`--shadow-${key}`, value);
+      });
+    }
 
-    root.style.setProperty('--font-primary', theme.fonts.primary);
-    root.style.setProperty('--font-secondary', theme.fonts.secondary);
+    // 设置圆角
+    if (theme.borderRadius) {
+      Object.entries(theme.borderRadius).forEach(([key, value]) => {
+        root.style.setProperty(`--border-radius-${key}`, value);
+      });
+    }
+
+    // 设置字体
+    if (theme.fonts) {
+      Object.entries(theme.fonts).forEach(([key, value]) => {
+        root.style.setProperty(`--font-${key}`, value);
+      });
+    }
 
     // 设置背景
     if (theme.colors.background.startsWith('linear-gradient')) {
@@ -265,6 +343,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme,
     themes
   };
+
+  // 确保主题已初始化
+  if (!themeReady) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="animate-pulse">
+          <div className="h-12 w-12 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900"></div>
+          <div className="text-center text-gray-600 dark:text-gray-400">加载主题中...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={value}>
