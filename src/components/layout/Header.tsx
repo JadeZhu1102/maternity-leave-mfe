@@ -10,6 +10,7 @@ import {
   Bars3Icon,
   BellIcon,
   Cog6ToothIcon,
+  UserIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
@@ -151,6 +152,23 @@ export function Header({ onMenuClick }: HeaderProps) {
                     {user?.email || 'user@example.com'}
                   </p>
                 </div>
+                <a
+                  href="/profile"
+                  className="flex w-full items-center px-4 py-2 text-sm transition-colors no-underline"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--color-hover)';
+                    e.currentTarget.style.color = 'var(--color-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--color-text-secondary)';
+                  }}
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  <UserIcon className="mr-3 h-4 w-4" />
+                  个人资料
+                </a>
                 <button
                   onClick={() => setUserMenuOpen(false)}
                   className="flex w-full items-center px-4 py-2 text-sm transition-colors"
@@ -165,7 +183,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   }}
                 >
                   <Cog6ToothIcon className="mr-3 h-4 w-4" />
-                  个人设置
+                  系统设置
                 </button>
                 <button
                   onClick={handleLogout}

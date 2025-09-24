@@ -10,7 +10,6 @@ import {
   HomeIcon,
   CalculatorIcon,
   ClockIcon,
-  UserIcon,
   UsersIcon,
   DocumentTextIcon,
   BuildingOfficeIcon,
@@ -48,12 +47,6 @@ const navigation: NavigationItem[] = [
     href: '/history', 
     icon: ClockIcon,
     description: '查看历史计算记录'
-  },
-  { 
-    name: '个人资料', 
-    href: '/profile', 
-    icon: UserIcon,
-    description: '管理个人信息和设置'
   },
   { 
     name: '政策管理', 
