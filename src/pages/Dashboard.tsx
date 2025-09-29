@@ -8,10 +8,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { MockDataService } from '../services/mockData';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import {
   CalculatorIcon,
-  ClockIcon,
   DocumentTextIcon,
   UsersIcon,
   ChartBarIcon,
@@ -40,7 +38,7 @@ export function Dashboard() {
   const [recentCalculations, setRecentCalculations] = useState<RecentCalculation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Add a safe way to access theme colors with fallbacks
+  // Safe theme color access with fallbacks
   const getThemeColor = (colorPath: string, fallback = '#000000') => {
     if (!theme?.colors) return fallback;
     const path = colorPath.split('.');
@@ -53,6 +51,10 @@ export function Dashboard() {
   };
 
   const isAdmin = hasRole('ADMIN') || hasRole('SUPER_ADMIN');
+  const themeColor = getThemeColor('colors.primary', '#3b82f6');
+
+  // Quick actions for the dashboard
+
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -80,16 +82,6 @@ export function Dashboard() {
     loadDashboardData();
   }, []);
 
-  const getThemeIcon = () => {
-    const icons = {
-      fresh: '🌱',
-      modern: '💼',
-      tech: '⚡',
-      warm: '🌸'
-    };
-    return icons[currentTheme];
-  };
-
   const statCards = [
     {
       name: '总用户数',
@@ -99,7 +91,7 @@ export function Dashboard() {
       bgColor: 'bg-blue-100',
     },
     {
-      name: '总计算次数',
+      name: '总计算量',
       value: stats?.totalCalculations || 0,
       icon: CalculatorIcon,
       color: 'text-green-600',
@@ -108,20 +100,20 @@ export function Dashboard() {
     {
       name: '本月计算',
       value: stats?.thisMonthCalculations || 0,
-      icon: ChartBarIcon,
+      icon: DocumentTextIcon,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
     },
     {
       name: '活跃政策',
       value: stats?.activePolicies || 0,
-      icon: DocumentTextIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-    },
+      icon: UsersIcon,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+    }
   ];
 
-  const quickActions = [
+  const quickActionsList = [
     {
       name: '产假计算',
       description: '快速计算产假天数',
@@ -134,7 +126,7 @@ export function Dashboard() {
       name: '查看历史',
       description: '查看计算历史记录',
       href: '/history',
-      icon: ClockIcon,
+      icon: DocumentTextIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
@@ -154,219 +146,185 @@ export function Dashboard() {
       icon: UsersIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
-      adminOnly: true,
-    },
+    }
   ];
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-          <div className="text-gray-500 dark:text-gray-400">加载中...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="tile h-32 animate-pulse bg-gray-100"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 tile h-96 animate-pulse bg-gray-100"></div>
+          <div className="tile h-96 animate-pulse bg-gray-100"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen" style={{ backgroundColor: getThemeColor('colors.background', '#f9fafb') }}>
-      {/* 主题装饰元素 */}
-      <div className="theme-decoration theme-decoration-1" />
-      <div className="theme-decoration theme-decoration-2" />
-      <div className="theme-decoration theme-decoration-3" />
-      
-      <div className="space-y-6 theme-animate-fade-in">
-        {/* 欢迎信息 */}
-        <div className="theme-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 
-                className="text-2xl font-bold mb-2"
-                style={{ color: getThemeColor('colors.text', '#111827') }}
-              >
-                {getThemeIcon()} 欢迎回来，{user?.name}！
-              </h1>
-              <p style={{ color: getThemeColor('colors.textSecondary', '#6b7280') }}>
-                今天是 {new Date().toLocaleDateString('zh-CN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long'
-                })}
-              </p>
-            </div>
-            <div 
-              className="text-6xl opacity-20"
-              style={{ color: getThemeColor('colors.primary', '#3b82f6') }}
-            >
-              {getThemeIcon()}
-            </div>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+              欢迎回来, {user?.name || '用户'}
+            </h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              今天是 {new Date().toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+              })}
+            </p>
+          </div>
+          <div className="mt-4 sm:mt-0 flex items-center space-x-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="w-2 h-2 mr-2 rounded-full bg-blue-500"></span>
+              当前主题: {theme?.name || '默认'}
+            </span>
           </div>
         </div>
 
-        {/* 统计卡片 */}
-        {isAdmin && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {statCards.map((stat) => (
-              <div key={stat.name} className="theme-stat-card">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div 
-                      className="p-3 rounded-md"
-                      style={{ 
-                        backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}20`,
-                        color: getThemeColor('colors.primary', '#3b82f6')
-                      }}
-                    >
-                      <stat.icon className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt 
-                        className="text-sm font-medium truncate"
-                        style={{ color: 'var(--color-text-secondary)' }}
-                      >
-                        {stat.name}
-                      </dt>
-                      <dd 
-                        className="text-lg font-medium"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        {stat.value.toLocaleString()}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 快速操作 */}
-        <div className="theme-card p-6 mb-8">
-          <h2 
-            className="text-lg font-medium mb-6"
-            style={{ color: 'var(--color-text)' }}
-          >
-            快速操作
-          </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions
-              .filter(action => !action.adminOnly || isAdmin)
-              .map((action) => (
-                <Link
-                  key={action.name}
-                  to={action.href}
-                  className="group relative rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          {statCards.map((stat) => (
+            <div
+              key={stat.name}
+              className="tile hover:shadow-md transition-shadow duration-200"
+            >
+              <div className="flex items-center p-5">
+                <div 
+                  className="p-3 rounded-lg mr-4"
                   style={{ 
-                    backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}08`,
-                    border: `1px solid ${getThemeColor('colors.border', '#e5e7eb')}`,
-                    backdropFilter: 'blur(10px)'
+                    backgroundColor: `${themeColor}15`,
+                    color: themeColor
                   }}
                 >
-                  <div>
-                    <span 
-                      className="rounded-xl inline-flex p-3 ring-4 ring-white shadow-lg"
-                      style={{ 
-                        backgroundColor: `${getThemeColor('colors.primary', '#3b82f6')}15`,
-                        color: getThemeColor('colors.primary', '#3b82f6')
-                      }}
-                    >
-                      <action.icon className="h-6 w-6" aria-hidden="true" />
-                    </span>
-                  </div>
-                  <div className="mt-6">
-                    <h3 
-                      className="text-lg font-semibold"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      <span className="absolute inset-0" aria-hidden="true" />
-                      {action.name}
-                    </h3>
-                    <p 
-                      className="mt-2 text-sm leading-relaxed"
-                      style={{ color: 'var(--color-text-secondary)' }}
-                    >
-                      {action.description}
-                    </p>
-                  </div>
-                  <span
-                    className="pointer-events-none absolute top-6 right-6 group-hover:scale-110 transition-transform duration-200"
-                    aria-hidden="true"
-                    style={{ color: 'var(--color-text-secondary)' }}
-                  >
-                    <ArrowRightIcon className="h-5 w-5" />
-                  </span>
-                </Link>
-              ))}
-          </div>
+                  <stat.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">{stat.name}</p>
+                  <p className="text-xl font-semibold mt-1">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* 最近计算记录 */}
-        <div className="theme-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 
-              className="text-lg font-medium"
-              style={{ color: 'var(--color-text)' }}
-            >
-              最近计算记录
-            </h2>
-            <Link
-              to="/history"
-              className="text-sm font-medium hover:underline"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              查看全部
-            </Link>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Actions */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
+                快速操作
+              </h2>
+              <span className="text-sm text-gray-500">
+                常用功能快速入口
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {quickActionsList
+                .filter((action) => !action.adminOnly || isAdmin)
+                .map((action) => (
+                  <Link
+                    key={action.name}
+                    to={action.href}
+                    className="tile group hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start">
+                        <div 
+                          className="p-2.5 rounded-lg mr-4"
+                          style={{ 
+                            backgroundColor: `${themeColor}08`,
+                            color: themeColor
+                          }}
+                        >
+                          <action.icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {action.name}
+                          </h3>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {action.description}
+                          </p>
+                        </div>
+                        <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRightIcon className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+            </div>
           </div>
-          
-          {recentCalculations.length > 0 ? (
-            <div className="w-full overflow-x-auto">
-              <div className="theme-table min-w-full">
-                <table className="w-full table-auto">
-                  <thead>
-                    <tr>
-                      <th className="theme-table th text-left px-4 py-3 min-w-[100px]">用户姓名</th>
-                      <th className="theme-table th text-left px-4 py-3 min-w-[100px]">所在城市</th>
-                      <th className="theme-table th text-left px-4 py-3 min-w-[100px]">计算天数</th>
-                      <th className="theme-table th text-left px-4 py-3 min-w-[120px]">计算时间</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentCalculations.map((calculation) => (
-                      <tr key={calculation.id} className="border-b border-opacity-20" style={{ borderColor: 'var(--color-border)' }}>
-                        <td className="theme-table td px-4 py-3 whitespace-nowrap">{calculation.userName}</td>
-                        <td className="theme-table td px-4 py-3 whitespace-nowrap">{calculation.cityName}</td>
-                        <td className="theme-table td px-4 py-3 whitespace-nowrap">{calculation.totalDays} 天</td>
-                        <td className="theme-table td px-4 py-3 whitespace-nowrap">
-                          {new Date(calculation.createdAt).toLocaleDateString('zh-CN')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Recent Activity */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
+                最近计算
+              </h2>
+              <Link 
+                to="/history" 
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                查看全部
+              </Link>
             </div>
-          ) : (
-            <div 
-              className="text-center py-8"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              <ClockIcon className="mx-auto h-12 w-12 opacity-50" />
-              <h3 className="mt-2 text-sm font-medium">暂无计算记录</h3>
-              <p className="mt-1 text-sm">开始使用产假计算器来创建记录</p>
-              <div className="mt-6">
-                <Link
-                  to="/calculator"
-                  className="theme-button"
-                >
-                  开始计算
-                </Link>
-              </div>
+            <div className="tile">
+              {recentCalculations.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {recentCalculations.map((calc) => (
+                    <div key={calc.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                          <DocumentTextIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="ml-3 flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {calc.userName}
+                          </p>
+                          <div className="flex items-center text-sm text-gray-500 mt-1">
+                            <span>{calc.cityName}</span>
+                            <span className="mx-2">·</span>
+                            <span>{calc.totalDays}天</span>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-sm text-gray-400">
+                          {new Date(calc.createdAt).toLocaleDateString('zh-CN', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-300" />
+                  <h3 className="mt-2 text-sm font-medium">暂无计算记录</h3>
+                  <p className="mt-1 text-sm">开始使用产假计算器来创建记录</p>
+                  <div className="mt-6">
+                    <Link
+                      to="/calculator"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      开始计算
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

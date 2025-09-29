@@ -57,47 +57,60 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   // 处理日期变化
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const dateString = event.target.value;
-    if (!dateString) {
-      onChange(null);
-      return;
-    }
-    
-    const date = new Date(dateString);
-    if (!isNaN(date.getTime())) {
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = e.target.value ? new Date(e.target.value) : null;
+    if (date && !isNaN(date.getTime())) {
       onChange(date);
+    } else if (!e.target.value) {
+      onChange(null);
     }
   };
 
-  // 获取输入框样式类
+  // 获取输入框类名
   const getInputClasses = () => {
     const baseClasses = [
-      'block w-full px-3 py-2 border rounded-md shadow-sm',
-      'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-      'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-      'transition-colors duration-200'
+      'block w-full pl-10 pr-3 py-2.5 rounded-md border',
+      'focus:outline-none focus:ring-2',
+      'sm:text-sm transition-colors',
     ];
 
+    if (disabled) {
+      baseClasses.push('bg-gray-100 text-gray-500 border-gray-200');
+      return baseClasses.join(' ');
+    }
+
     if (error) {
-      baseClasses.push('border-red-300 text-red-900 placeholder-red-300');
+      baseClasses.push('border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500');
     } else {
-      baseClasses.push('border-gray-300 text-gray-900 placeholder-gray-400');
+      baseClasses.push('border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500');
     }
 
     return baseClasses.join(' ');
   };
 
   return (
-    <div className="space-y-1">
-      {/* 标签 */}
+    <div className="space-y-1.5">
       <label className="block text-sm font-medium text-gray-700">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
 
-      {/* 输入框 */}
-      <div className="relative">
+      <div className="relative rounded-md shadow-sm">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg 
+            className="h-5 w-5 text-gray-400" 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 20 20" 
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path 
+              fillRule="evenodd" 
+              d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" 
+              clipRule="evenodd" 
+            />
+          </svg>
+        </div>
         <input
           type="date"
           value={formatDateForInput(value)}
@@ -108,47 +121,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           className={getInputClasses()}
           placeholder={placeholder}
         />
-        
-        {/* 日历图标 */}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <svg 
-            className="h-5 w-5 text-gray-400" 
-            xmlns="http://www.w3.org/2000/svg" 
-            viewBox="0 0 20 20" 
-            fill="currentColor"
-          >
-            <path 
-              fillRule="evenodd" 
-              d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" 
-              clipRule="evenodd" 
-            />
-          </svg>
-        </div>
       </div>
 
-      {/* 帮助文本 */}
-      {helpText && !error && (
-        <p className="text-sm text-gray-500">{helpText}</p>
-      )}
-
-      {/* 错误信息 */}
-      {error && (
-        <p className="text-sm text-red-600 flex items-center">
-          <svg 
-            className="h-4 w-4 mr-1" 
-            xmlns="http://www.w3.org/2000/svg" 
-            viewBox="0 0 20 20" 
-            fill="currentColor"
-          >
-            <path 
-              fillRule="evenodd" 
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" 
-              clipRule="evenodd" 
-            />
-          </svg>
-          {error}
-        </p>
-      )}
+      {error ? (
+        <p className="mt-1.5 text-sm text-red-600">{error}</p>
+      ) : helpText ? (
+        <p className="mt-1.5 text-xs text-gray-500">{helpText}</p>
+      ) : null}
     </div>
   );
 };
