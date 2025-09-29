@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type ThemeType = 'fresh' | 'modern' | 'tech' | 'warm';
+export type ThemeType = 'fresh' | 'modern' | 'tech' | 'warm' | 'ocbc';
 
 interface ColorPalette {
   primary: string;
@@ -175,30 +175,67 @@ const themes: Record<ThemeType, ThemeConfig> = {
   },
   warm: {
     id: 'warm',
-    name: '温暖友好',
-    description: '温暖色调，友好亲切的设计风格',
+    name: '温暖柔和',
+    description: '温暖柔和的色调，营造舒适氛围',
     colors: {
-      primary: '#EC4899',
-      secondary: '#8B5CF6',
+      primary: '#DB2777',
+      secondary: '#EC4899',
       accent: '#F472B6',
-      background: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)',
-      surface: 'rgba(255, 255, 255, 0.9)',
-      text: '#4C1D95',
+      background: '#FDF2F8',
+      surface: '#FFFFFF',
+      text: '#831843',
       textSecondary: '#6B7280',
-      border: 'rgba(236, 72, 153, 0.1)',
+      border: '#FBCFE8',
       success: '#10B981',
       warning: '#F59E0B',
       error: '#EF4444'
     },
     gradients: {
-      primary: 'linear-gradient(135deg, #EC4899, #8B5CF6)',
-      background: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)',
+      primary: 'linear-gradient(135deg, #DB2777, #EC4899)',
+      background: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 50%, #FBCFE8 100%)',
       card: 'rgba(255, 255, 255, 0.9)'
     },
     shadows: {
-      small: '0 4px 20px rgba(236, 72, 153, 0.1)',
-      medium: '0 8px 32px rgba(236, 72, 153, 0.1)',
-      large: '0 12px 48px rgba(236, 72, 153, 0.15)'
+      small: '0 4px 20px rgba(219, 39, 119, 0.1)',
+      medium: '0 8px 32px rgba(219, 39, 119, 0.1)',
+      large: '0 12px 48px rgba(219, 39, 119, 0.15)'
+    },
+    borderRadius: {
+      small: '15px',
+      medium: '20px',
+      large: '25px'
+    },
+    fonts: {
+      primary: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
+      secondary: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    }
+  },
+  ocbc: {
+    id: 'ocbc',
+    name: 'OCBC银行',
+    description: 'OCBC银行企业主题，专业可靠',
+    colors: {
+      primary: '#E21833', // OCBC红色
+      secondary: '#B30E23', // 深红色
+      accent: '#FF4D5F', // 亮红色
+      background: '#F8F9FA', // 浅灰色背景
+      surface: '#FFFFFF', // 白色表面
+      text: '#1A202C', // 深灰色文字
+      textSecondary: '#4A5568', // 中等灰色文字
+      border: 'rgba(226, 24, 51, 0.1)', // 半透明红色边框
+      success: '#38A169', // 成功绿色
+      warning: '#DD6B20', // 警告橙色
+      error: '#E53E3E' // 错误红色
+    },
+    gradients: {
+      primary: 'linear-gradient(135deg, #E21833, #FF4D5F)',
+      background: 'linear-gradient(135deg, #F8F9FA 0%, #EDF2F7 100%)',
+      card: 'rgba(255, 255, 255, 0.95)'
+    },
+    shadows: {
+      small: '0 4px 20px rgba(226, 24, 51, 0.1)',
+      medium: '0 8px 32px rgba(226, 24, 51, 0.1)',
+      large: '0 12px 48px rgba(226, 24, 51, 0.15)'
     },
     borderRadius: {
       small: '12px',
@@ -206,8 +243,8 @@ const themes: Record<ThemeType, ThemeConfig> = {
       large: '20px'
     },
     fonts: {
-      primary: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      secondary: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+      primary: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      secondary: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     }
   }
 };

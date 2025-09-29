@@ -30,9 +30,10 @@ export function ThemeSwitcher() {
       fresh: '🌱',
       modern: '💼',
       tech: '⚡',
-      warm: '🌸'
+      warm: '🌸',
+      ocbc: '🏦' // Bank emoji for OCBC theme
     };
-    return icons[themeId];
+    return icons[themeId] || '🎨'; // Default emoji if not found
   };
 
   return (

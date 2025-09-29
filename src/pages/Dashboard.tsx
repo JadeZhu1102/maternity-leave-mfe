@@ -14,7 +14,18 @@ import {
   UsersIcon,
   ChartBarIcon,
   ArrowRightIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
+
+interface StatCard {
+  name: string;
+  value: number;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  color: string;
+  bgColor: string;
+  href: string;
+  adminOnly?: boolean;
+}
 
 interface DashboardStats {
   totalUsers: number;
@@ -89,6 +100,8 @@ export function Dashboard() {
       icon: UsersIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
+      href: '/admin/users',
+      adminOnly: true
     },
     {
       name: '总计算量',
@@ -96,6 +109,7 @@ export function Dashboard() {
       icon: CalculatorIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
+      href: '/history'
     },
     {
       name: '本月计算',
@@ -103,13 +117,16 @@ export function Dashboard() {
       icon: DocumentTextIcon,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
+      href: '/history?filter=this-month'
     },
     {
       name: '活跃政策',
       value: stats?.activePolicies || 0,
-      icon: UsersIcon,
+      icon: DocumentTextIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
+      href: '/admin/policies',
+      adminOnly: true
     }
   ];
 
@@ -144,8 +161,18 @@ export function Dashboard() {
       description: '管理系统用户',
       href: '/admin/users',
       icon: UsersIcon,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      adminOnly: true,
+    },
+    {
+      name: '公司设置',
+      description: '管理系统基本设置',
+      href: '/admin/company',
+      icon: Cog6ToothIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
+      adminOnly: true,
     }
   ];
 
@@ -193,28 +220,35 @@ export function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {statCards.map((stat) => (
-            <div
-              key={stat.name}
-              className="tile hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="flex items-center p-5">
-                <div 
-                  className="p-3 rounded-lg mr-4"
-                  style={{ 
-                    backgroundColor: `${themeColor}15`,
-                    color: themeColor
-                  }}
-                >
-                  <stat.icon className="h-5 w-5" />
+          {statCards
+            .filter(stat => !stat.adminOnly || isAdmin)
+            .map((stat) => (
+              <Link
+                key={stat.name}
+                to={stat.href}
+                className="tile hover:shadow-md transition-all duration-200 group"
+              >
+                <div className="flex items-center p-5">
+                  <div 
+                    className="p-3 rounded-lg mr-4 transition-colors duration-200 group-hover:bg-opacity-30"
+                    style={{ 
+                      backgroundColor: `${themeColor}15`,
+                      color: themeColor
+                    }}
+                  >
+                    <stat.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
+                      {stat.name}
+                    </p>
+                    <p className="text-xl font-semibold mt-1 text-gray-900 group-hover:text-blue-700 transition-colors">
+                      {stat.value}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                  <p className="text-xl font-semibold mt-1">{stat.value}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+              </Link>
+            ))}
         </div>
 
         {/* Main Content */}
@@ -225,9 +259,6 @@ export function Dashboard() {
               <h2 className="text-lg font-semibold text-gray-900">
                 快速操作
               </h2>
-              <span className="text-sm text-gray-500">
-                常用功能快速入口
-              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {quickActionsList
