@@ -23,6 +23,7 @@ export const useCalculator = () => {
     isMultipleBirth: false,
     isDifficultBirth: false,
     age: undefined,
+    averageSalary: undefined,
   });
 
   // 计算状态
@@ -54,6 +55,7 @@ export const useCalculator = () => {
       isMultipleBirth: false,
       isDifficultBirth: false,
       age: undefined,
+      averageSalary: undefined,
     });
     setResult(null);
     setErrors([]);

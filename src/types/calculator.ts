@@ -25,6 +25,8 @@ export interface CalculatorState {
   isDifficultBirth?: boolean;
   /** 年龄 */
   age?: number;
+  /** 员工平均薪资（元/月） */
+  averageSalary?: number;
 }
 
 /** 计算结果接口 */
@@ -59,6 +61,8 @@ export interface AllowanceCalculation {
   baseAmount: number;
   /** 津贴比例 */
   percentage: number;
+  /** 是否使用了用户输入的平均薪资 */
+  usedAverageSalary: boolean;
 }
 
 /** 计算详情 */

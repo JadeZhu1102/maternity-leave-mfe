@@ -56,7 +56,7 @@ export const Button: React.FC<ButtonProps> = ({
     const styles: Record<string, React.CSSProperties> = {
       primary: {
         background: 'var(--gradient-primary)',
-        color: 'var(--color-text-inverse)',
+        color: 'var(--color-text-primary)',
         border: '2px solid transparent',
         boxShadow: 'var(--shadow-lg)'
       },
@@ -68,25 +68,25 @@ export const Button: React.FC<ButtonProps> = ({
       },
       success: {
         background: 'var(--color-success)',
-        color: 'var(--color-text-inverse)',
+        color: 'var(--color-text-primary)',
         border: '2px solid transparent',
         boxShadow: 'var(--shadow-lg)'
       },
       warning: {
         background: 'var(--color-warning)',
-        color: 'var(--color-text-inverse)',
+        color: 'var(--color-text-primary)',
         border: '2px solid transparent',
         boxShadow: 'var(--shadow-lg)'
       },
       error: {
         background: 'var(--color-error)',
-        color: 'var(--color-text-inverse)',
+        color: 'var(--color-text-primary)',
         border: '2px solid transparent',
         boxShadow: 'var(--shadow-lg)'
       },
       info: {
         background: 'var(--color-info)',
-        color: 'var(--color-text-inverse)',
+        color: 'var(--color-text-primary)',
         border: '2px solid transparent',
         boxShadow: 'var(--shadow-lg)'
       },

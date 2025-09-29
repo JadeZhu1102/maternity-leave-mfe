@@ -51,7 +51,7 @@ export const calculateMaternityLeave = async (
   
   // 计算津贴（如果有政策支持）
   const allowance = policy.allowancePolicy 
-    ? calculateAllowance(totalDays, policy.allowancePolicy, workYears)
+    ? calculateAllowance(totalDays, policy.allowancePolicy, workYears, state.averageSalary)
     : undefined;
 
   // 构建详细说明
@@ -168,15 +168,19 @@ const calculateExtraDays = (
  * @param totalDays - 总产假天数
  * @param allowancePolicy - 津贴政策
  * @param workYears - 工作年限
+ * @param averageSalary - 员工平均薪资（元/月）
  * @returns 津贴计算结果
  */
 const calculateAllowance = (
   totalDays: number,
   allowancePolicy: any,
-  workYears: number
+  workYears: number,
+  averageSalary?: number
 ): AllowanceCalculation => {
-  // 这里简化处理，实际应用中需要根据用户输入的工资基数计算
-  const baseAmount = allowancePolicy.minAmount || 5000; // 默认基数
+  // 使用用户输入的平均薪资，如果没有输入则使用政策规定的最低基数
+  const baseAmount = averageSalary || allowancePolicy.minAmount || 5000;
+  
+  // 计算每月津贴金额（通常为平均工资的一定比例）
   const monthlyAmount = baseAmount * allowancePolicy.percentage;
   
   // 按天计算总津贴
@@ -184,10 +188,11 @@ const calculateAllowance = (
   const totalAmount = dailyAmount * totalDays;
 
   return {
-    monthlyAmount,
-    totalAmount: Math.round(totalAmount),
-    baseAmount,
-    percentage: allowancePolicy.percentage
+    monthlyAmount: Math.round(monthlyAmount * 100) / 100, // 保留两位小数
+    totalAmount: Math.round(totalAmount * 100) / 100,     // 保留两位小数
+    baseAmount: Math.round(baseAmount * 100) / 100,       // 保留两位小数
+    percentage: allowancePolicy.percentage,
+    usedAverageSalary: !!averageSalary  // 标记是否使用了用户输入的平均薪资
   };
 };
 

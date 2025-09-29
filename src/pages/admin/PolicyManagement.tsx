@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { PolicyEditModal } from '../../components/policy/PolicyEditModal';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { cn } from '../../utils/cn';
 import {
   PlusIcon,
@@ -37,6 +38,8 @@ export function PolicyManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingPolicy, setEditingPolicy] = useState<CityPolicy | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [policyToDelete, setPolicyToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<CityPolicy>>({});
 
   useEffect(() => {
@@ -124,16 +127,30 @@ export function PolicyManagement() {
     setShowModal(true);
   };
 
-  const handleDeletePolicy = async (policyId: string) => {
-    if (!confirm('确定要删除这个政策吗？')) return;
+  const handleDeleteClick = (policyId: string) => {
+    setPolicyToDelete(policyId);
+    setShowDeleteDialog(true);
+  };
 
+  const handleDeletePolicy = async () => {
+    if (!policyToDelete) return;
+    
     try {
       // 这里应该调用实际的API
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      setPolicies(prev => prev.filter(p => p.id !== policyId));
+      setPolicies(prev => prev.filter(policy => policy.id !== policyToDelete));
+      
+      // 重置删除状态
+      setPolicyToDelete(null);
+      // 这里可以添加一个 toast 通知，而不是使用 alert
+      console.log('政策删除成功');
     } catch (error) {
       console.error('删除政策失败:', error);
+      // 这里可以添加一个错误 toast 通知
+      console.error('删除政策失败，请重试');
+    } finally {
+      setShowDeleteDialog(false);
     }
   };
 
@@ -310,8 +327,9 @@ export function PolicyManagement() {
                         <PencilIcon className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleDeletePolicy(policy.id)}
+                        onClick={() => handleDeleteClick(policy.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="删除政策"
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
@@ -331,6 +349,18 @@ export function PolicyManagement() {
         policy={formData}
         onSave={handleSavePolicy}
         title={editingPolicy ? '编辑政策' : '添加新政策'}
+      />
+
+      {/* 删除确认对话框 */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeletePolicy}
+        title="确认删除"
+        message="确定要删除这条政策吗？此操作不可撤销。"
+        confirmText="确认删除"
+        cancelText="取消"
+        isDanger={true}
       />
     </div>
   );

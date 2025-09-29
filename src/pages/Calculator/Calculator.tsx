@@ -196,6 +196,32 @@ export const Calculator: React.FC = () => {
                     />
                     <p className="text-sm text-gray-500">部分地区对晚育有额外假期政策</p>
                   </div>
+                  
+                  {/* 平均薪资 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      员工平均薪资（元/月）
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">¥</span>
+                      </div>
+                      <input
+                        type="number"
+                        value={state.averageSalary || ''}
+                        onChange={(e) => updateState({ 
+                          averageSalary: e.target.value ? parseFloat(e.target.value) : undefined 
+                        })}
+                        min="0"
+                        step="0.01"
+                        className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="例如：10000.00"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      输入平均月薪可计算生育津贴（按日计算）
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
