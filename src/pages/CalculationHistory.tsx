@@ -249,18 +249,18 @@ export function CalculationHistory() {
               <div className="flex space-x-2">
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex-1"
+                  className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap min-w-[100px]"
                 >
-                  <FunnelIcon className="h-3.5 w-3.5 mr-1.5" />
-                  更多筛选
+                  <FunnelIcon className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                  <span>更多筛选</span>
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex-1"
+                  className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap min-w-[100px]"
                   onClick={handleExport}
                 >
-                  <DocumentArrowDownIcon className="h-3.5 w-3.5 mr-1.5" />
-                  导出数据
+                  <DocumentArrowDownIcon className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-700" />
+                  <span>导出数据</span>
                 </button>
               </div>
             </div>
