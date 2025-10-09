@@ -144,13 +144,9 @@ export function CalculationHistory() {
                 <input
                   type="text"
                   placeholder="搜索记录..."
-                  className="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    paddingLeft: '2.5rem', // 40px
-                    paddingRight: '1rem',  // 16px
-                  }}
                 />
               </div>
               
@@ -167,13 +163,9 @@ export function CalculationHistory() {
                   endDate={endDate}
                   maxDate={endDate || new Date()}
                   placeholderText="开始日期"
-                  className="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   wrapperClassName="w-full"
                   dateFormat="yyyy-MM-dd"
-                  style={{
-                    paddingLeft: '2.5rem',
-                    paddingRight: '1rem',
-                  }}
                 />
               </div>
               <div className="relative">
@@ -189,13 +181,9 @@ export function CalculationHistory() {
                   minDate={startDate}
                   maxDate={new Date()}
                   placeholderText="结束日期"
-                  className="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   wrapperClassName="w-full"
                   dateFormat="yyyy-MM-dd"
-                  style={{
-                    paddingLeft: '2.5rem',
-                    paddingRight: '1rem',
-                  }}
                 />
               </div>
               
@@ -205,13 +193,9 @@ export function CalculationHistory() {
                   <FunnelIcon className="h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
                 <select
-                  className="block w-full pl-10 pr-8 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  className="block w-full pl-12 pr-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
-                  style={{
-                    paddingLeft: '2.5rem', // 40px
-                    paddingRight: '2rem',  // 32px for dropdown arrow
-                  }}
                 >
                   <option value="">所有城市</option>
                   {cities.map(city => (

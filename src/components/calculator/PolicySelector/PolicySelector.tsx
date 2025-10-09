@@ -52,11 +52,12 @@ export const PolicySelector: React.FC<PolicySelectorProps> = ({
   // 获取选择框样式类
   const getSelectClasses = () => {
     const baseClasses = [
-      'block w-full px-3 py-2 border rounded-md shadow-sm',
+      'block w-full px-3 py-2 pr-10 border rounded-md shadow-sm',
       'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
       'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
       'transition-colors duration-200',
-      'bg-white'
+      'bg-white',
+      'appearance-none' // 隐藏浏览器原生下拉箭头
     ];
 
     if (error) {
