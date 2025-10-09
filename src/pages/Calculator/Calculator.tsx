@@ -6,10 +6,11 @@
 import React, { useState } from 'react';
 import { useCalculator } from '../../hooks/useCalculator';
 import { DatePicker } from '../../components/calculator/DatePicker';
-import { PolicySelector } from '../../components/calculator/PolicySelector';
-import { ResultDisplay } from '../../components/calculator/ResultDisplay';
 import { Button } from '../../components/common/Button';
-import { EMPLOYMENT_TYPE_OPTIONS } from '../../constants/policies';
+import { CITIES } from '../../constants/cities';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import type { City } from '../../types/common';
 
 /**
  * 产假计算器页面组件
@@ -42,6 +43,12 @@ export const Calculator: React.FC = () => {
   const handleReset = () => {
     resetState();
     setShowAdvancedOptions(false);
+  };
+
+  // 格式化日期显示
+  const formatDate = (date: Date | null) => {
+    if (!date) return '';
+    return format(date, 'yyyy年MM月dd日', { locale: zhCN });
   };
 
   return (
@@ -83,54 +90,147 @@ export const Calculator: React.FC = () => {
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">基本信息</h2>
               
               <div className="space-y-6">
-                {/* 入职日期 */}
-                <DatePicker
-                  label="入职日期"
-                  value={state.employmentDate}
-                  onChange={(date) => updateState({ employmentDate: date })}
-                  required
-                  maxDate={new Date()}
-                  helpText="请选择您开始工作的日期"
-                />
-
-                {/* 预产期/生产日期 */}
-                <DatePicker
-                  label="预产期/生产日期"
-                  value={state.startDate}
-                  onChange={(date) => updateState({ startDate: date })}
-                  required
-                  minDate={state.employmentDate || undefined}
-                  helpText="请选择预产期或实际生产日期"
-                />
-
-                {/* 所在地区 */}
-                <PolicySelector
-                  label="所在地区"
-                  value={state.region}
-                  onChange={(region) => updateState({ region })}
-                  required
-                  helpText="选择您工作所在的城市，将应用对应的产假政策"
-                />
-
-                {/* 就业类型 */}
+                {/* 员工姓名 */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    就业类型
+                    员工姓名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={state.staffName}
+                    onChange={(e) => updateState({ staffName: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="请输入员工姓名"
+                  />
+                </div>
+
+                {/* 预产期 */}
+                <DatePicker
+                  label="预产期"
+                  value={state.childBirthdate}
+                  onChange={(date) => updateState({ childBirthdate: date })}
+                  required
+                  minDate={new Date()}
+                  helpText="请选择预产期"
+                />
+
+                {/* 休假开始日期 */}
+                <DatePicker
+                  label="休假开始日期"
+                  value={state.leaveStartDate}
+                  onChange={(date) => updateState({ leaveStartDate: date })}
+                  required
+                  minDate={state.childBirthdate || new Date()}
+                  helpText="请选择休假开始日期"
+                />
+
+                {/* 所在城市 */}
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    所在城市 <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={state.employmentType}
-                    onChange={(e) => updateState({ employmentType: e.target.value as any })}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    value={state.cityName}
+                    onChange={(e) => updateState({ cityName: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    <option value="">请选择城市</option>
+                    {CITIES.map((city: City) => (
+                      <option key={city.code} value={city.name}>
+                        {city.name}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* 婴儿数量 */}
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    婴儿数量
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={state.infantNumber}
+                    onChange={(e) => updateState({ infantNumber: parseInt(e.target.value) || 1 })}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="1"
+                  />
+                </div>
+
+                {/* 分娩顺序 */}
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    分娩顺序
+                  </label>
+                  <select
+                    value={state.deliverySequence}
+                    onChange={(e) => updateState({ deliverySequence: parseInt(e.target.value) })}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="1">第一胎</option>
+                    <option value="2">第二胎</option>
+                    <option value="3">第三胎及以上</option>
+                  </select>
+                </div>
+
+                {/* 高级选项 */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                    className="text-sm text-blue-600 hover:text-blue-800 focus:outline-none"
+                  >
+                    {showAdvancedOptions ? '隐藏' : '显示'}高级选项
+                  </button>
+
+                  {showAdvancedOptions && (
+                    <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-md">
+                      <div className="flex items-center">
+                        <input
+                          id="dystocia"
+                          type="checkbox"
+                          checked={state.dystocia}
+                          onChange={(e) => updateState({ dystocia: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="dystocia" className="ml-2 block text-sm text-gray-700">
+                          是否难产
+                        </label>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          id="abortion"
+                          type="checkbox"
+                          checked={state.abortion}
+                          onChange={(e) => updateState({ abortion: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="abortion" className="ml-2 block text-sm text-gray-700">
+                          是否流产
+                        </label>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          id="ectopicPregnancy"
+                          type="checkbox"
+                          checked={state.ectopicPregnancy}
+                          onChange={(e) => updateState({ ectopicPregnancy: e.target.checked })}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="ectopicPregnancy" className="ml-2 block text-sm text-gray-700">
+                          是否宫外孕
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
+
 
             {/* 高级选项 */}
             <div className="bg-white rounded-lg shadow p-6">

@@ -139,4 +139,16 @@ export type ComponentVariant = 'primary' | 'secondary' | 'success' | 'warning' |
 export type EventHandler<T = Event> = (event: T) => void;
 
 /** 异步函数类型 */
-export type AsyncFunction<T = any, R = any> = (params: T) => Promise<R>;
+export type AsyncFunction = (...args: any[]) => Promise<any>;
+
+/** 城市信息接口 */
+export interface City {
+  /** 城市代码 */
+  code: string;
+  /** 城市名称 */
+  name: string;
+  /** 省份 */
+  province?: string;
+  /** 是否启用 */
+  enabled?: boolean;
+}

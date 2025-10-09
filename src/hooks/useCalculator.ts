@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import type { CalculatorState, CalculationResult } from '../types/calculator';
-import { calculateMaternityLeave, validateCalculationParams } from '../utils/calculations/maternity';
+import { calculateLeaveDates, calculateAllowance } from '../services/maternityLeaveService';
 
 /**
  * 产假计算器 Hook
@@ -16,6 +16,29 @@ import { calculateMaternityLeave, validateCalculationParams } from '../utils/cal
 export const useCalculator = () => {
   // 计算器状态
   const [state, setState] = useState<CalculatorState>({
+    // Basic information
+    staffName: '',
+    childBirthdate: null,
+    infantNumber: 1,
+    deliverySequence: 1,
+    abortion: false,
+    dystocia: false,
+    cityName: '',
+    companyName: 'E2P',
+    leaveStartDate: null,
+    leaveEndDate: null,
+    calendarCode: 'CN',
+    regnancyDays: 0,
+    ectopicPregnancy: false,
+    recommendAbortionLeaveDays: 0,
+    dystociaCodeList: [],
+    
+    // Salary information - default to company average of 1000
+    averageSalary: 1000, // Default company average salary
+    currentSalary: null,
+    hitForceCompensationRule: false,
+    
+    // Legacy fields (keep for backward compatibility)
     startDate: null,
     employmentDate: null,
     region: '',
@@ -23,14 +46,13 @@ export const useCalculator = () => {
     isMultipleBirth: false,
     isDifficultBirth: false,
     age: undefined,
-    averageSalary: undefined,
   });
 
   // 计算状态
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-
+  
   /**
    * 更新计算器状态
    * Update calculator state
@@ -48,6 +70,21 @@ export const useCalculator = () => {
    */
   const resetState = useCallback(() => {
     setState({
+      staffName: '',
+      childBirthdate: null,
+      infantNumber: 1,
+      deliverySequence: 1,
+      abortion: false,
+      dystocia: false,
+      cityName: '',
+      companyName: 'E2P',
+      leaveStartDate: null,
+      calendarCode: 'CN',
+      regnancyDays: 0,
+      ectopicPregnancy: false,
+      recommendAbortionLeaveDays: 0,
+      dystociaCodeList: [],
+      // Reset legacy fields
       startDate: null,
       employmentDate: null,
       region: '',
@@ -67,7 +104,12 @@ export const useCalculator = () => {
    */
   const calculate = useCallback(async (): Promise<CalculationResult | null> => {
     // 验证输入参数
-    const validationErrors = validateCalculationParams(state);
+    const validationErrors = [];
+    if (!state.staffName) validationErrors.push('请输入员工姓名');
+    if (!state.childBirthdate) validationErrors.push('请选择预产期');
+    if (!state.cityName) validationErrors.push('请选择所在城市');
+    if (!state.leaveStartDate) validationErrors.push('请选择休假开始日期');
+    
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       return null;
@@ -77,9 +119,79 @@ export const useCalculator = () => {
     setErrors([]);
 
     try {
-      const calculationResult = await calculateMaternityLeave(state);
-      setResult(calculationResult);
-      return calculationResult;
+      // 准备基础API请求参数
+      const baseRequestData = {
+        staffName: state.staffName,
+        childBirthdate: formatDateForApi(state.childBirthdate),
+        infantNumber: state.infantNumber,
+        deliverySequence: state.deliverySequence,
+        abortion: state.abortion,
+        dystocia: state.dystocia,
+        cityName: state.cityName,
+        companyName: state.companyName,
+        leaveStartDate: formatDateForDisplay(state.leaveStartDate),
+        calendarCode: state.calendarCode,
+        regnancyDays: state.regnancyDays,
+        ectopicPregnancy: state.ectopicPregnancy,
+        recommendAbortionLeaveDays: state.recommendAbortionLeaveDays,
+        dystociaCodeList: state.dystociaCodeList,
+      };
+
+      // 调用基础API计算产假日期
+      const leaveResponse = await calculateLeaveDates(baseRequestData);
+      let result = mapApiResponseToResult(leaveResponse);
+      
+      // 如果用户输入了薪资信息，则调用津贴计算API
+      if ((state.averageSalary !== null || state.currentSalary !== null) && state.leaveStartDate) {
+        try {
+          // 确保休假结束日期存在，如果API返回的leaveEndDate不存在，则根据休假开始日期和标准产假天数计算
+          const leaveEndDate = result.leaveDetail?.leaveEndDate || 
+            (() => {
+              const endDate = new Date(state.leaveStartDate);
+              // 标准产假天数（根据城市政策可能会有所不同）
+              const standardMaternityLeaveDays = 98; // 默认98天
+              endDate.setDate(endDate.getDate() + standardMaternityLeaveDays);
+              return formatDateForDisplay(endDate);
+            })();
+          
+          const allowanceRequestData = {
+            ...baseRequestData,
+            averageSalary: state.averageSalary || 0, // 确保不为null
+            currentSalary: state.currentSalary || 0, // 确保不为null
+            hitForceCompensationRule: state.hitForceCompensationRule,
+            leaveEndDate: leaveEndDate
+          };
+          
+          console.log('Calling allowance API with data:', allowanceRequestData);
+          const allowanceResponse = await calculateAllowance(allowanceRequestData);
+          
+          // 合并津贴计算结果
+          result = {
+            ...result,
+            allowanceDetail: {
+              ...result.allowanceDetail,
+              ...(allowanceResponse.allowanceDetail || {})
+            },
+            calculateComments: {
+              ...result.calculateComments,
+              descriptionList: [
+                ...(result.calculateComments?.descriptionList || []),
+                ...(allowanceResponse.calculateComments?.descriptionList || [])
+              ]
+            }
+          };
+        } catch (error) {
+          // 如果津贴计算失败，只记录错误，不中断主流程
+          console.error('津贴计算失败:', error);
+          setErrors(prev => [
+            ...prev,
+            `产假日期计算成功，但津贴计算失败: ${error instanceof Error ? error.message : '未知错误'}`
+          ]);
+        }
+      }
+      
+      setResult(result);
+      return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '计算过程中发生未知错误';
       setErrors([errorMessage]);
@@ -90,76 +202,101 @@ export const useCalculator = () => {
   }, [state]);
 
   /**
+   * 格式化日期为API需要的格式 (yyyyMMdd)
+   */
+  const formatDateForApi = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  };
+
+  /**
+   * 格式化日期为显示格式 (yyyy-MM-dd)
+   */
+  const formatDateForDisplay = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  /**
+   * 将API响应转换为计算结果
+   */
+  const mapApiResponseToResult = (response: any): CalculationResult => {
+    return {
+      allowanceDetail: response.allowanceDetail,
+      leaveDetail: response.leaveDetail,
+      calculateComments: response.calculateComments,
+      // 兼容旧版字段
+      totalDays: response.leaveDetail?.currentLeaveDays,
+      startDate: new Date(response.leaveDetail.leaveStartDate),
+      endDate: new Date(response.leaveDetail.leaveEndDate),
+      details: response.calculateComments.descriptionList.map((desc: string) => ({
+        item: desc,
+        days: 0,
+        description: desc,
+      })),
+    };
+  };
+
+  /**
    * 检查表单是否有效
    * Check if form is valid
    */
   const isValid = useMemo(() => {
     return !!(
-      state.startDate && 
-      state.employmentDate && 
-      state.region &&
-      state.startDate > state.employmentDate
+      state.staffName &&
+      state.childBirthdate &&
+      state.cityName &&
+      state.leaveStartDate
     );
   }, [state]);
 
-  /**
-   * 检查是否有必填字段为空
-   * Check if any required fields are empty
-   */
-  const hasRequiredFields = useMemo(() => {
-    return !!(state.startDate && state.employmentDate && state.region);
-  }, [state]);
-
-  /**
-   * 获取表单完成度百分比
-   * Get form completion percentage
-   */
+  // 计算完成百分比
   const completionPercentage = useMemo(() => {
-    let completed = 0;
-    const total = 4; // 必填字段数量
+    let filledFields = 0;
+    const totalFields = 4; // 总必填字段数
 
-    if (state.startDate) completed++;
-    if (state.employmentDate) completed++;
-    if (state.region) completed++;
-    if (state.employmentType) completed++;
+    if (state.staffName) filledFields++;
+    if (state.childBirthdate) filledFields++;
+    if (state.cityName) filledFields++;
+    if (state.leaveStartDate) filledFields++;
 
-    return Math.round((completed / total) * 100);
+    return Math.round((filledFields / totalFields) * 100);
   }, [state]);
 
-  /**
-   * 获取下一步提示
-   * Get next step hint
-   */
+  // 下一步提示
   const nextStepHint = useMemo(() => {
-    if (!state.employmentDate) {
-      return '请选择您的入职日期';
-    }
-    if (!state.startDate) {
-      return '请选择预产期或生产日期';
-    }
-    if (!state.region) {
-      return '请选择您所在的地区';
-    }
-    if (isValid && !result) {
-      return '点击计算按钮查看结果';
-    }
+    if (!state.staffName) return '请输入员工姓名';
+    if (!state.childBirthdate) return '请选择预产期';
+    if (!state.cityName) return '请选择所在城市';
+    if (!state.leaveStartDate) return '请选择休假开始日期';
     return '';
-  }, [state, isValid, result]);
+  }, [state]);
+
+  // 是否有必填字段
+  const hasRequiredFields = useMemo(() => {
+    return !!(
+      state.staffName &&
+      state.childBirthdate &&
+      state.cityName &&
+      state.leaveStartDate
+    );
+  }, [state]);
 
   return {
-    // 状态
     state,
     result,
     errors,
     isCalculating,
-    
-    // 验证状态
     isValid,
-    hasRequiredFields,
     completionPercentage,
     nextStepHint,
-    
-    // 操作方法
+    hasRequiredFields,
     updateState,
     resetState,
     calculate,
