@@ -311,7 +311,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           <CardContent>
             {corpSalaryFields.map((field, index) => (
               <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Grid container spacing={2} alignItems="flex-end" component="div">
+                <Grid container spacing={2} alignItems="flex-start">
                   <Grid item xs={12} sm={5} component="div">
                     <TextField
                       label="公司名称"
@@ -323,6 +323,9 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                       })}
                       error={!!errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName}
                       helperText={errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName?.message}
+                      FormHelperTextProps={{
+                        style: { marginTop: 0, marginBottom: 0 }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={5} component="div">
@@ -341,6 +344,9 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                       helperText={
                         errors.allowancePolicy?.corpSalaryDetailList?.[index]?.corpAverageSalary?.message
                       }
+                      FormHelperTextProps={{
+                        style: { marginTop: 0, marginBottom: 0 }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={2} component="div">
