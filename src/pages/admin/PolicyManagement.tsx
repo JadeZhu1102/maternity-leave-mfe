@@ -20,14 +20,24 @@ import {
 interface CityPolicy {
   id: string;
   cityName: string;
-  cityCode: string;
-  baseMaternityDays: number;
-  difficultBirthDays: number;
-  multipleBirthDays: number;
-  companionLeaveDays: number;
+  statutoryPolicy: {
+    leaveDays: number;
+    maxLeaveDays: number;
+    delayForPublicHoliday: boolean;
+    calendarDay: boolean;
+  };
+  dystociaPolicy: {
+    standardLeaveDays: number;
+    delayForPublicHoliday: boolean;
+    calendarDay: boolean;
+  };
+  moreInfantPolicy: {
+    leaveDays: number;
+    delayForPublicHoliday: boolean;
+    calendarDay: boolean;
+  };
   isActive: boolean;
   effectiveDate: string;
-  expiryDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,40 +64,73 @@ export function PolicyManagement() {
       const mockPolicies: CityPolicy[] = [
         {
           id: '1',
-          cityCode: 'BJ',
           cityName: '北京',
-          baseMaternityDays: 98,
-          difficultBirthDays: 15,
-          multipleBirthDays: 15,
-          companionLeaveDays: 15,
-          effectiveDate: '2023-01-01',
+          statutoryPolicy: {
+            leaveDays: 98,
+            maxLeaveDays: 128,
+            delayForPublicHoliday: true,
+            calendarDay: false
+          },
+          dystociaPolicy: {
+            standardLeaveDays: 15,
+            delayForPublicHoliday: true,
+            calendarDay: false
+          },
+          moreInfantPolicy: {
+            leaveDays: 15,
+            delayForPublicHoliday: true,
+            calendarDay: false
+          },
           isActive: true,
+          effectiveDate: '2023-01-01',
           createdAt: '2023-01-01T00:00:00Z',
-          updatedAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z'
         },
         {
           id: '2',
-          cityCode: 'SH',
           cityName: '上海',
-          baseMaternityDays: 98,
-          difficultBirthDays: 15,
-          multipleBirthDays: 15,
-          companionLeaveDays: 10,
-          effectiveDate: '2023-01-01',
+          statutoryPolicy: {
+            leaveDays: 98,
+            maxLeaveDays: 128,
+            delayForPublicHoliday: true,
+            calendarDay: true
+          },
+          dystociaPolicy: {
+            standardLeaveDays: 15,
+            delayForPublicHoliday: true,
+            calendarDay: true
+          },
+          moreInfantPolicy: {
+            leaveDays: 15,
+            delayForPublicHoliday: true,
+            calendarDay: true
+          },
           isActive: true,
+          effectiveDate: '2023-01-01',
           createdAt: '2023-01-01T00:00:00Z',
-          updatedAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z'
         },
         {
           id: '3',
-          cityCode: 'GZ',
           cityName: '广州',
-          baseMaternityDays: 98,
-          difficultBirthDays: 30,
-          multipleBirthDays: 15,
-          companionLeaveDays: 15,
-          effectiveDate: '2023-01-01',
+          statutoryPolicy: {
+            leaveDays: 98,
+            maxLeaveDays: 178,
+            delayForPublicHoliday: false,
+            calendarDay: true
+          },
+          dystociaPolicy: {
+            standardLeaveDays: 30,
+            delayForPublicHoliday: false,
+            calendarDay: true
+          },
+          moreInfantPolicy: {
+            leaveDays: 15,
+            delayForPublicHoliday: false,
+            calendarDay: true
+          },
           isActive: false,
+          effectiveDate: '2023 年 1 月 1 日',
           createdAt: '2023-01-01T00:00:00Z',
           updatedAt: '2023-01-01T00:00:00Z',
         },
@@ -149,8 +192,7 @@ export function PolicyManagement() {
   };
 
   const filteredPolicies = policies.filter(policy =>
-    policy.cityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    policy.cityCode.toLowerCase().includes(searchTerm.toLowerCase())
+    policy.cityName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -182,7 +224,7 @@ export function PolicyManagement() {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               placeholder="搜索城市或代码..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -222,16 +264,16 @@ export function PolicyManagement() {
                     城市
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    基础产假
+                    法定产假
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    最长产假
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     难产假
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    多胞胎假
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    陪产假
+                    多胎假
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     状态
@@ -245,24 +287,42 @@ export function PolicyManagement() {
                 {filteredPolicies.map((policy) => (
                   <tr key={policy.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{policy.cityName}</div>
-                          <div className="text-sm text-gray-500">{policy.cityCode}</div>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">{policy.cityName}</span>
+                        <span className="text-xs text-gray-500">生效日: {policy.effectiveDate}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{policy.baseMaternityDays} 天</div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{policy.statutoryPolicy.leaveDays} 天</span>
+                        <span className="text-xs text-gray-500">
+                          {policy.statutoryPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{policy.difficultBirthDays} 天</div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{policy.statutoryPolicy.maxLeaveDays} 天</span>
+                        <span className="text-xs text-gray-500">
+                          {policy.statutoryPolicy.calendarDay ? '日历日' : '工作日'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{policy.multipleBirthDays} 天/孩</div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{policy.dystociaPolicy.standardLeaveDays} 天</span>
+                        <span className="text-xs text-gray-500">
+                          {policy.dystociaPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{policy.companionLeaveDays} 天</div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{policy.moreInfantPolicy.leaveDays} 天</span>
+                        <span className="text-xs text-gray-500">
+                          {policy.moreInfantPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
