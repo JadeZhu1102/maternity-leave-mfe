@@ -156,7 +156,7 @@ export function LoginPage() {
               type="submit"
               disabled={isSubmitting}
               className={cn(
-                "group relative flex w-full justify-center rounded-md bg-primary-600 py-2 px-3 text-sm font-semibold text-white hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+                "group relative flex w-full justify-center rounded-md bg-primary-600 py-2 px-3 text-sm font-semibold   hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
                 isSubmitting && "opacity-50 cursor-not-allowed"
               )}
             >

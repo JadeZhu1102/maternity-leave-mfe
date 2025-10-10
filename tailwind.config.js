@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const colors = require('tailwindcss/colors')
+
 export default {
   content: [
     "./index.html",
@@ -7,6 +9,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Custom colors
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
@@ -19,6 +22,16 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
         },
+        // Include all default Tailwind colors
+        gray: colors.gray,
+        red: colors.red,
+        yellow: colors.amber,
+        green: colors.emerald,
+        blue: colors.blue,
+        indigo: colors.indigo,
+        purple: colors.violet,
+        pink: colors.pink,
+        // Secondary colors
         secondary: {
           50: '#fdf2f8',
           100: '#fce7f3',

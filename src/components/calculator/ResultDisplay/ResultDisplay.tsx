@@ -43,7 +43,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   return (
     <div className={`bg-white rounded-lg shadow-lg border border-gray-200 ${className}`}>
       {/* 结果头部 */}
-      <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-6 rounded-t-lg">
+      <div className="bg-gradient-to-r from-primary-500 to-primary-600   p-6 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-2xl font-bold">产假计算结果</h3>

@@ -46,7 +46,7 @@ export const AllowanceDisplay: React.FC<AllowanceDisplayProps> = ({
   return (
     <div className={`bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden ${className}`}>
       {/* 头部标题 */}
-      <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-6">
+      <div className="bg-gradient-to-r from-primary-500 to-primary-600   p-6">
         <h3 className="text-2xl font-bold">生育津贴计算结果</h3>
         <p className="text-primary-100 mt-1">详细津贴及工资明细</p>
       </div>

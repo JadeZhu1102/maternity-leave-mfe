@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { PolicyEditModal } from '../../components/policy/PolicyEditModal';
+import CreatePolicyModal from '../../components/policy/CreatePolicyModal';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { cn } from '../../utils/cn';
 import {
@@ -36,11 +36,10 @@ export function PolicyManagement() {
   const [policies, setPolicies] = useState<CityPolicy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingPolicy, setEditingPolicy] = useState<CityPolicy | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<CityPolicy>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadPolicies();
@@ -103,18 +102,7 @@ export function PolicyManagement() {
   };
 
   const handleAddPolicy = () => {
-    setEditingPolicy(null);
-    setFormData({
-      cityCode: '',
-      cityName: '',
-      baseMaternityDays: 98,
-      difficultBirthDays: 0,
-      multipleBirthDays: 0,
-      companionLeaveDays: 15,
-      effectiveDate: new Date().toISOString().split('T')[0],
-      isActive: true,
-    });
-    setShowModal(true);
+    setShowCreateModal(true);
   };
 
   const handleEditPolicy = (policy: CityPolicy) => {
@@ -154,43 +142,10 @@ export function PolicyManagement() {
     }
   };
 
-  const handleSavePolicy = async (updatedPolicy: Partial<CityPolicy>) => {
-    try {
-      // 这里应该调用实际的API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (editingPolicy) {
-        // 更新政策
-        setPolicies(prev => prev.map(p => 
-          p.id === editingPolicy.id 
-            ? { ...p, ...updatedPolicy, updatedAt: new Date().toISOString() } as CityPolicy
-            : p
-        ));
-      } else {
-        // 添加新政策
-        const newPolicy: CityPolicy = {
-          ...updatedPolicy as CityPolicy,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          cityName: updatedPolicy.cityName || '',
-          cityCode: updatedPolicy.cityCode || '',
-          baseMaternityDays: updatedPolicy.baseMaternityDays || 0,
-          difficultBirthDays: updatedPolicy.difficultBirthDays || 0,
-          multipleBirthDays: updatedPolicy.multipleBirthDays || 0,
-          companionLeaveDays: updatedPolicy.companionLeaveDays || 0,
-          isActive: updatedPolicy.isActive || false,
-          effectiveDate: updatedPolicy.effectiveDate || new Date().toISOString(),
-        };
-        setPolicies(prev => [...prev, newPolicy]);
-      }
-      
-      setShowModal(false);
-      setEditingPolicy(null);
-      setFormData({});
-    } catch (error) {
-      console.error('保存政策失败:', error);
-    }
+  const handlePolicyCreated = () => {
+    // 刷新政策列表
+    loadPolicies();
+    setShowCreateModal(false);
   };
 
   const filteredPolicies = policies.filter(policy =>
@@ -211,7 +166,7 @@ export function PolicyManagement() {
         <button
           type="button"
           onClick={handleAddPolicy}
-          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md   bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
           添加政策
@@ -251,7 +206,7 @@ export function PolicyManagement() {
               <button
                 type="button"
                 onClick={handleAddPolicy}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md   bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
                 添加政策
@@ -342,13 +297,11 @@ export function PolicyManagement() {
         )}
       </div>
 
-      {/* 添加/编辑政策模态框 */}
-      <PolicyEditModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        policy={formData}
-        onSave={handleSavePolicy}
-        title={editingPolicy ? '编辑政策' : '添加新政策'}
+      {/* 添加政策模态框 */}
+      <CreatePolicyModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handlePolicyCreated}
       />
 
       {/* 删除确认对话框 */}
