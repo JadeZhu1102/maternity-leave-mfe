@@ -24,6 +24,7 @@ interface PolicyFormProps {
   onSubmit: (data: CreatePolicyPayload) => Promise<void>;
   initialData?: Partial<CreatePolicyPayload>;
   loading?: boolean;
+  onCancel?: () => void;
 }
 
 export const PolicyForm: React.FC<PolicyFormProps> = ({

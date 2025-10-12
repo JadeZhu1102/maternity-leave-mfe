@@ -17,7 +17,7 @@ export interface CalculatorState {
   /** 预产期 */
   childBirthdate: Date | null;
   /** 婴儿数量 */
-  infantNumber: number;
+  infantNumber?: number;
   /** 分娩顺序 */
   deliverySequence: number;
   /** 是否流产 */
@@ -47,7 +47,7 @@ export interface CalculatorState {
   
   // Salary related fields
   /** 平均工资 */
-  averageSalary: number | null;
+  averageSalary?: number | null;
   /** 当前工资 */
   currentSalary: number | null;
   /** 是否适用强制补偿规则 */

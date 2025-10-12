@@ -19,10 +19,12 @@ export const useCalculator = () => {
     // Basic information
     staffName: '',
     childBirthdate: null,
-    infantNumber: 1,
+    infantNumber: undefined, // Changed from 1 to undefined to make it deletable
     deliverySequence: 1,
     abortion: false,
+    abortionType: null,
     dystocia: false,
+    dystociaType: null,
     cityName: '',
     companyName: 'E2P',
     leaveStartDate: null,
@@ -33,8 +35,8 @@ export const useCalculator = () => {
     recommendAbortionLeaveDays: 0,
     dystociaCodeList: [],
     
-    // Salary information - default to company average of 1000
-    averageSalary: 1000, // Default company average salary
+    // Salary information
+    averageSalary: undefined,
     currentSalary: null,
     hitForceCompensationRule: false,
     
@@ -72,19 +74,25 @@ export const useCalculator = () => {
     setState({
       staffName: '',
       childBirthdate: null,
-      infantNumber: 1,
+      infantNumber: undefined,
       deliverySequence: 1,
       abortion: false,
+      abortionType: null,
       dystocia: false,
+      dystociaType: null,
       cityName: '',
       companyName: 'E2P',
       leaveStartDate: null,
+      leaveEndDate: null,
       calendarCode: 'CN',
       regnancyDays: 0,
       ectopicPregnancy: false,
       recommendAbortionLeaveDays: 0,
       dystociaCodeList: [],
-      // Reset legacy fields
+      averageSalary: undefined,
+      currentSalary: null,
+      hitForceCompensationRule: false,
+      // Legacy fields
       startDate: null,
       employmentDate: null,
       region: '',
@@ -92,7 +100,6 @@ export const useCalculator = () => {
       isMultipleBirth: false,
       isDifficultBirth: false,
       age: undefined,
-      averageSalary: undefined,
     });
     setResult(null);
     setErrors([]);
@@ -102,34 +109,29 @@ export const useCalculator = () => {
    * 执行产假计算
    * Execute maternity leave calculation
    */
-  const calculate = useCallback(async (): Promise<CalculationResult | null> => {
-    // 验证输入参数
-    const validationErrors = [];
-    if (!state.staffName) validationErrors.push('请输入员工姓名');
-    if (!state.childBirthdate) validationErrors.push('请选择预产期');
-    if (!state.cityName) validationErrors.push('请选择所在城市');
-    if (!state.leaveStartDate) validationErrors.push('请选择休假开始日期');
-    
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return null;
-    }
+  const handleCalculate = useCallback(async () => {
+    if (!validateForm()) return;
 
+    // Ensure required fields have values
+    const infantNumber = state.infantNumber ?? 1; // Default to 1 if undefined
+    
     setIsCalculating(true);
     setErrors([]);
 
     try {
-      // 准备基础API请求参数
-      const baseRequestData = {
+      // 准备请求参数
+      const requestData: any = {
         staffName: state.staffName,
-        childBirthdate: formatDateForApi(state.childBirthdate),
-        infantNumber: state.infantNumber,
+        childBirthdate: state.childBirthdate?.toISOString() || '',
+        infantNumber: infantNumber,
         deliverySequence: state.deliverySequence,
         abortion: state.abortion,
+        abortionType: state.abortionType || undefined,
         dystocia: state.dystocia,
+        dystociaType: state.dystociaType || undefined,
         cityName: state.cityName,
         companyName: state.companyName,
-        leaveStartDate: formatDateForDisplay(state.leaveStartDate),
+        leaveStartDate: state.leaveStartDate?.toISOString() || '',
         calendarCode: state.calendarCode,
         regnancyDays: state.regnancyDays,
         ectopicPregnancy: state.ectopicPregnancy,
@@ -138,7 +140,7 @@ export const useCalculator = () => {
       };
 
       // 调用基础API计算产假日期
-      const leaveResponse = await calculateLeaveDates(baseRequestData);
+      const leaveResponse = await calculateLeaveDates(requestData);
       let result = mapApiResponseToResult(leaveResponse);
       
       // 如果用户输入了薪资信息，则调用津贴计算API
@@ -154,16 +156,29 @@ export const useCalculator = () => {
               return formatDateForDisplay(endDate);
             })();
           
-          const allowanceRequestData = {
-            ...baseRequestData,
-            averageSalary: state.averageSalary || 0, // 确保不为null
-            currentSalary: state.currentSalary || 0, // 确保不为null
+          const allowanceRequest: any = {
+            averageSalary: state.averageSalary || 0, // Default to 0 if undefined
+            currentSalary: state.currentSalary || 0,
             hitForceCompensationRule: state.hitForceCompensationRule,
-            leaveEndDate: leaveEndDate
+            leaveEndDate: leaveEndDate,
+            staffName: state.staffName,
+            childBirthdate: state.childBirthdate?.toISOString() || '',
+            infantNumber: infantNumber,
+            deliverySequence: state.deliverySequence,
+            abortion: state.abortion,
+            dystocia: state.dystocia,
+            cityName: state.cityName,
+            companyName: state.companyName,
+            leaveStartDate: state.leaveStartDate?.toISOString() || '',
+            calendarCode: state.calendarCode,
+            regnancyDays: state.regnancyDays,
+            ectopicPregnancy: state.ectopicPregnancy,
+            recommendAbortionLeaveDays: state.recommendAbortionLeaveDays,
+            dystociaCodeList: state.dystociaCodeList,
           };
           
-          console.log('Calling allowance API with data:', allowanceRequestData);
-          const allowanceResponse = await calculateAllowance(allowanceRequestData);
+          console.log('Calling allowance API with data:', allowanceRequest);
+          const allowanceResponse = await calculateAllowance(allowanceRequest);
           
           // 合并津贴计算结果
           result = {
@@ -299,6 +314,6 @@ export const useCalculator = () => {
     hasRequiredFields,
     updateState,
     resetState,
-    calculate,
+    calculate: handleCalculate,
   };
 };

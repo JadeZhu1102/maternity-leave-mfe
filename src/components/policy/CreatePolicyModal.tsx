@@ -15,7 +15,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 
 const CreatePolicyModal: React.FC<CreatePolicyModalProps> = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const { enqueueSnackbar } = useSnackbar();
+  
+  // Reset form by incrementing the key to force re-render
+  const resetForm = () => {
+    setFormKey(prevKey => prevKey + 1);
+  };
 
   const handleSubmit = async (data: CreatePolicyPayload) => {
     try {
@@ -83,6 +89,8 @@ const CreatePolicyModal: React.FC<CreatePolicyModalProps> = ({ open, onClose, on
         onSuccess();
       }
       
+      // Reset the form and close the modal
+      resetForm();
       onClose();
     } catch (error) {
       console.error('创建政策失败:', error);
@@ -101,10 +109,9 @@ const CreatePolicyModal: React.FC<CreatePolicyModalProps> = ({ open, onClose, on
   return (
     <Dialog 
       open={open} 
-      onClose={!loading ? onClose : undefined}
-      maxWidth="md"
+      onClose={onClose} 
+      maxWidth="md" 
       fullWidth
-      aria-labelledby="create-policy-dialog-title"
     >
       <DialogTitle id="create-policy-dialog-title" sx={{ color: 'black' }}>
         新增产假政策
@@ -112,8 +119,13 @@ const CreatePolicyModal: React.FC<CreatePolicyModalProps> = ({ open, onClose, on
       <DialogContent dividers>
         <Box sx={{ pt: 2 }}>
           <PolicyForm 
+            key={formKey} 
             onSubmit={handleSubmit} 
             loading={loading} 
+            onCancel={() => {
+              resetForm();
+              onClose();
+            }}
           />
         </Box>
       </DialogContent>
