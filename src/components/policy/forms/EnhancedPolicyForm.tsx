@@ -3,8 +3,6 @@ import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { CreatePolicyPayload } from '../../../types/policyApi';
 import { 
   TextField, 
-  Checkbox, 
-  FormControlLabel, 
   Typography, 
   IconButton, 
   Button, 
@@ -14,7 +12,11 @@ import {
   Divider,
   Box,
   Grid,
-  Paper
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -83,29 +85,25 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
     cityName: '',
     statutoryPolicy: {
       leaveDays: 98,
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
       maxLeaveDays: 180,
+      bonusLeaveDays: 0, // 新增奖励假
     },
     dystociaPolicy: {
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
       standardLeaveDays: 15,
     },
     moreInfantPolicy: {
       leaveDays: 15,
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
     },
     otherExtendedPolicy: {
       leaveDays: 0,
-      delayForPublicHoliday: false,
-      calendarDay: true,
+      calendarDay: true, // 默认日历日
       maxLeaveDays: 180,
     },
     abortionPolicy: {
-      delayForPublicHoliday: false,
-      calendarDay: true,
+      calendarDay: true, // 默认日历日
       abortionRules: [
         {
           ectopicPregnancy: true,
@@ -219,29 +217,53 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
                   helperText={errors.statutoryPolicy?.maxLeaveDays?.message}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('statutoryPolicy.delayForPublicHoliday')}
-                      defaultChecked={defaultValues.statutoryPolicy?.delayForPublicHoliday}
-                      size="small"
-                    />
-                  }
-                  label="法定节假日顺延"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('statutoryPolicy.calendarDay')}
-                      defaultChecked={defaultValues.statutoryPolicy?.calendarDay}
-                      size="small"
-                    />
-                  }
-                  label="按自然日计算"
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>计算方式</InputLabel>
+                  <Select
+                    {...register('statutoryPolicy.calendarDay')}
+                    defaultValue={true}
+                    label="计算方式"
+                  >
+                    <MenuItem value="true">日历日</MenuItem>
+                    <MenuItem value="false">工作日</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StyledTextField
+                  label="奖励假（天）"
+                  type="number"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  {...register('statutoryPolicy.bonusLeaveDays', {
+                    valueAsNumber: true,
+                    min: { value: 0, message: '不能小于0' },
+                  })}
+                  error={!!errors.statutoryPolicy?.bonusLeaveDays}
+                  helperText={errors.statutoryPolicy?.bonusLeaveDays?.message}
                 />
               </Grid>
             </Grid>
+            
+            <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => window.history.back()}
+                disabled={loading}
+              >
+                取消
+              </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? '保存中...' : '保存'}
+              </Button>
+            </Stack>
           </CardContent>
         </SectionCard>
       </Box>

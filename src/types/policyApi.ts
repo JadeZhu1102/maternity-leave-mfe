@@ -5,26 +5,23 @@
 
 export interface StatutoryPolicy {
   leaveDays: number;
-  delayForPublicHoliday: boolean;
   calendarDay: boolean;
   maxLeaveDays: number;
+  bonusLeaveDays: number;
 }
 
 export interface DystociaPolicy {
-  delayForPublicHoliday: boolean;
   calendarDay: boolean;
   standardLeaveDays: number;
 }
 
 export interface MoreInfantPolicy {
   leaveDays: number;
-  delayForPublicHoliday: boolean;
   calendarDay: boolean;
 }
 
 export interface OtherExtendedPolicy {
   leaveDays: number;
-  delayForPublicHoliday: boolean;
   calendarDay: boolean;
   maxLeaveDays: number;
 }
@@ -39,7 +36,6 @@ export interface AbortionRule {
 }
 
 export interface AbortionPolicy {
-  delayForPublicHoliday: boolean;
   calendarDay: boolean;
   abortionRules: AbortionRule[];
 }

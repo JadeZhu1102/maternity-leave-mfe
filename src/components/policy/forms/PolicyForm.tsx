@@ -4,7 +4,11 @@ import { CreatePolicyPayload } from '../../../types/policyApi';
 import { 
   TextField, 
   Checkbox, 
+  FormControl, 
   FormControlLabel, 
+  InputLabel, 
+  Select, 
+  MenuItem,
   Typography, 
   IconButton, 
   Button, 
@@ -36,29 +40,25 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
     cityName: '',
     statutoryPolicy: {
       leaveDays: 98,
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
       maxLeaveDays: 180,
+      bonusLeaveDays: 0,
     },
     dystociaPolicy: {
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
       standardLeaveDays: 15,
     },
     moreInfantPolicy: {
       leaveDays: 15,
-      delayForPublicHoliday: false,
-      calendarDay: false,
+      calendarDay: true, // 默认日历日
     },
     otherExtendedPolicy: {
       leaveDays: 0,
-      delayForPublicHoliday: false,
-      calendarDay: true,
+      calendarDay: true, // 默认日历日
       maxLeaveDays: 180,
     },
     abortionPolicy: {
-      delayForPublicHoliday: false,
-      calendarDay: true,
+      calendarDay: true, // 默认日历日
       abortionRules: [
         {
           ectopicPregnancy: true,
@@ -220,28 +220,18 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   helperText={errors.statutoryPolicy?.maxLeaveDays?.message}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('statutoryPolicy.delayForPublicHoliday')}
-                      defaultChecked={defaultValues.statutoryPolicy?.delayForPublicHoliday}
-                      size="small"
-                    />
-                  }
-                  label="法定节假日顺延"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('statutoryPolicy.calendarDay')}
-                      defaultChecked={defaultValues.statutoryPolicy?.calendarDay}
-                      size="small"
-                      className="ml-4"
-                    />
-                  }
-                  label="按自然日计算"
-                />
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>计算方式</InputLabel>
+                  <Select
+                    {...register('statutoryPolicy.calendarDay')}
+                    defaultValue={true}
+                    label="计算方式"
+                  >
+                    <MenuItem value="true">日历日</MenuItem>
+                    <MenuItem value="false">工作日</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
           </CardContent>
@@ -267,28 +257,18 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   helperText={errors.dystociaPolicy?.standardLeaveDays?.message}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('dystociaPolicy.delayForPublicHoliday')}
-                      defaultChecked={defaultValues.dystociaPolicy?.delayForPublicHoliday}
-                      size="small"
-                    />
-                  }
-                  label="法定节假日顺延"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('dystociaPolicy.calendarDay')}
-                      defaultChecked={defaultValues.dystociaPolicy?.calendarDay}
-                      size="small"
-                      className="ml-4"
-                    />
-                  }
-                  label="按自然日计算"
-                />
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>计算方式</InputLabel>
+                  <Select
+                    {...register('dystociaPolicy.calendarDay')}
+                    defaultValue={true}
+                    label="计算方式"
+                  >
+                    <MenuItem value="true">日历日</MenuItem>
+                    <MenuItem value="false">工作日</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
           </CardContent>
@@ -312,8 +292,8 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           <CardContent>
             {corpSalaryFields.map((field, index) => (
               <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Grid container spacing={2} alignItems="flex-start">
-                  <Grid item xs={12} sm={5} component="div">
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={5}>
                     <TextField
                       label="公司名称"
                       variant="outlined"
@@ -329,7 +309,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5} component="div">
+                  <Grid item xs={12} md={5}>
                     <TextField
                       label="公司平均工资"
                       type="number"
@@ -350,7 +330,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={2} component="div">
+                  <Grid item xs={12} md={2} container justifyContent="flex-end">
                     <IconButton
                       color="error"
                       onClick={() => removeCorpSalary(index)}
