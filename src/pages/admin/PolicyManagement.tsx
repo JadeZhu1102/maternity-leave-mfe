@@ -296,7 +296,7 @@ export function PolicyManagement() {
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">{policy.statutoryPolicy.leaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          {policy.statutoryPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                          {policy.statutoryPolicy.delayForPublicHoliday ? '日历日' : '工作日'}
                         </span>
                       </div>
                     </td>
@@ -312,7 +312,7 @@ export function PolicyManagement() {
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">{policy.dystociaPolicy.standardLeaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          {policy.dystociaPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                          {policy.dystociaPolicy.delayForPublicHoliday ? '日历日' : '工作日'}
                         </span>
                       </div>
                     </td>
@@ -320,7 +320,7 @@ export function PolicyManagement() {
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">{policy.moreInfantPolicy.leaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          {policy.moreInfantPolicy.delayForPublicHoliday ? '含节假日' : '不含节假日'}
+                          {policy.moreInfantPolicy.delayForPublicHoliday ? '日历日' : '工作日'}
                         </span>
                       </div>
                     </td>
