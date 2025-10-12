@@ -16,7 +16,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Stack
+  Stack,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -106,9 +108,10 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
       calendarDay: true, // 默认日历日
       abortionRules: [
         {
+          name: '宫外孕',
           ectopicPregnancy: true,
-          minRegnancyDays: 0,
-          maxRegnancyDays: 300,
+          minPregnancyDays: 0,
+          maxPregnancyDays: 300,
           minLeaveDays: 15,
           maxLeaveDays: 42,
           leaveDays: 15
@@ -140,7 +143,8 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
     register, 
     handleSubmit, 
     control, 
-    formState: { errors } 
+    formState: { errors },
+    watch
   } = useForm<CreatePolicyPayload>({
     defaultValues,
   });
@@ -156,6 +160,22 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
       control,
       name: 'abortionPolicy.abortionRules',
     });
+
+  // Add a new abortion rule
+  const handleAddAbortionRule = () => {
+    appendAbortionRule({
+      name: '',
+      ectopicPregnancy: false,
+      minPregnancyDays: 0,
+      maxPregnancyDays: 300,
+      minLeaveDays: 0,
+      maxLeaveDays: 42,
+      leaveDays: 0
+    });
+  };
+
+  // Watch abortion rules for validation
+  const abortionRules = watch('abortionPolicy.abortionRules') || [];
 
   const onSubmitHandler: SubmitHandler<CreatePolicyPayload> = async (data) => {
     await onSubmit(data);
@@ -179,6 +199,127 @@ export const EnhancedPolicyForm: React.FC<PolicyFormProps> = ({
                 helperText={errors.cityName?.message}
               />
             </FormRow>
+          </CardContent>
+        </SectionCard>
+
+        {/* Abortion Policy Section */}
+        <SectionCard>
+          <SectionHeader 
+            title="流产假政策" 
+            action={
+              <Button 
+                size="small" 
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddAbortionRule}
+              >
+                添加流产规则
+              </Button>
+            }
+          />
+          <CardContent>
+            {abortionRuleFields.length === 0 ? (
+              <Box textAlign="center" py={2} color="text.secondary">
+                暂无流产规则，请点击上方按钮添加
+              </Box>
+            ) : (
+              <Box>
+                {abortionRuleFields.map((field, index) => (
+                  <Box key={field.id} mb={3} p={2} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography variant="subtitle2">
+                        流产规则 #{index + 1}
+                      </Typography>
+                      <IconButton 
+                        size="small" 
+                        color="error"
+                        onClick={() => removeAbortionRule(index)}
+                        aria-label="删除规则"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <StyledTextField
+                          label="规则名称"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          {...register(`abortionPolicy.abortionRules.${index}.name` as const, {
+                            required: '规则名称为必填项'
+                          })}
+                          error={!!errors.abortionPolicy?.abortionRules?.[index]?.name}
+                          helperText={errors.abortionPolicy?.abortionRules?.[index]?.name?.message}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <StyledTextField
+                          label="默认休假天数"
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          {...register(`abortionPolicy.abortionRules.${index}.leaveDays` as const, {
+                            valueAsNumber: true,
+                            required: '休假天数为必填项',
+                            min: { value: 0, message: '不能小于0' }
+                          })}
+                          error={!!errors.abortionPolicy?.abortionRules?.[index]?.leaveDays}
+                          helperText={errors.abortionPolicy?.abortionRules?.[index]?.leaveDays?.message}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <StyledTextField
+                          label="最小怀孕天数"
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          {...register(`abortionPolicy.abortionRules.${index}.minPregnancyDays` as const, {
+                            valueAsNumber: true,
+                            required: '最小怀孕天数为必填项',
+                            min: { value: 0, message: '不能小于0' }
+                          })}
+                          error={!!errors.abortionPolicy?.abortionRules?.[index]?.minPregnancyDays}
+                          helperText={errors.abortionPolicy?.abortionRules?.[index]?.minPregnancyDays?.message}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <StyledTextField
+                          label="最大怀孕天数"
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          {...register(`abortionPolicy.abortionRules.${index}.maxPregnancyDays` as const, {
+                            valueAsNumber: true,
+                            required: '最大怀孕天数为必填项',
+                            min: { value: 0, message: '不能小于0' },
+                            validate: (value) => 
+                              value >= abortionRules[index]?.minPregnancyDays || 
+                              '必须大于或等于最小怀孕天数'
+                          })}
+                          error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxPregnancyDays}
+                          helperText={errors.abortionPolicy?.abortionRules?.[index]?.maxPregnancyDays?.message}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              {...register(`abortionPolicy.abortionRules.${index}.ectopicPregnancy` as const)}
+                            />
+                          }
+                          label="是否为宫外孕"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </CardContent>
         </SectionCard>
 

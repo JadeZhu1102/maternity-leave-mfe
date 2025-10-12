@@ -27,12 +27,13 @@ export interface OtherExtendedPolicy {
 }
 
 export interface AbortionRule {
-  ectopicPregnancy: boolean;
-  minRegnancyDays: number;
-  maxRegnancyDays: number;
-  minLeaveDays: number;
-  maxLeaveDays: number;
-  leaveDays: number;
+  name: string; // 规则名称，如"宫外孕"、"自然流产"等
+  ectopicPregnancy?: boolean; // 是否为宫外孕
+  minPregnancyDays: number; // 最小怀孕天数
+  maxPregnancyDays: number; // 最大怀孕天数
+  minLeaveDays: number; // 最小休假天数
+  maxLeaveDays: number; // 最大休假天数
+  leaveDays: number; // 默认休假天数
 }
 
 export interface AbortionPolicy {

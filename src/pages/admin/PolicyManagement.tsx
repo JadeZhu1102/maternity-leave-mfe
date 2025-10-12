@@ -8,13 +8,8 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import CreatePolicyModal from '../../components/policy/CreatePolicyModal';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { cn } from '../../utils/cn';
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  MagnifyingGlassIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import EditPolicyModal from '../../components/policy/EditPolicyModal';
 
 // Define the CityPolicy interface
 interface CityPolicy {
@@ -48,6 +43,7 @@ export function PolicyManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<CityPolicy | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,12 +150,6 @@ export function PolicyManagement() {
 
   const handleEditPolicy = (policy: CityPolicy) => {
     setEditingPolicy(policy);
-    setFormData({
-      ...policy,
-      effectiveDate: policy.effectiveDate.split('T')[0],
-      expiryDate: policy.expiryDate?.split('T')[0],
-    });
-    setShowModal(true);
   };
 
   const handleDeleteClick = (policyId: string) => {
@@ -372,12 +362,22 @@ export function PolicyManagement() {
         )}
       </div>
 
-      {/* 添加政策模态框 */}
-      <CreatePolicyModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={handlePolicyCreated}
-      />
+      {showCreateModal && (
+        <CreatePolicyModal 
+          open={showCreateModal} 
+          onClose={() => setShowCreateModal(false)} 
+          onSuccess={handlePolicyCreated} 
+        />
+      )}
+      
+      {editingPolicy && (
+        <EditPolicyModal
+          open={!!editingPolicy}
+          onClose={() => setEditingPolicy(null)}
+          policy={editingPolicy}
+          onSuccess={handlePolicyCreated}
+        />
+      )}
 
       {/* 删除确认对话框 */}
       <ConfirmDialog
