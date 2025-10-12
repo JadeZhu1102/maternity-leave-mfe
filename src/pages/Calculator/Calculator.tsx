@@ -3,16 +3,13 @@
  * Maternity Leave Calculator Main Page
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCalculator } from '../../hooks/useCalculator';
-import { DatePicker } from '../../components/calculator/DatePicker';
-import { Button } from '../../components/common/Button';
-import { CITIES } from '../../constants/cities';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import type { City } from '../../types/common';
+import { SUPPORTED_CITIES, getCityByName } from '../../constants/supportedCities';
 import { fetchPolicyByCity, type PolicyData } from '../../services/policyService';
 import { ResultDisplay } from '../../components/calculator/ResultDisplay';
+import { DatePicker } from '../../components/common/DatePicker';
+import { Button } from '../../components/common/Button';
 
 /**
  * 产假计算器页面组件
@@ -24,11 +21,8 @@ export const Calculator: React.FC = () => {
   const {
     state,
     result,
-    errors,
+    errors: calculationErrors,
     isCalculating,
-    isValid,
-    completionPercentage,
-    nextStepHint,
     updateState,
     resetState,
     calculate,
@@ -41,9 +35,10 @@ export const Calculator: React.FC = () => {
 
   // 获取城市政策
   const fetchCityPolicy = async (cityName: string) => {
-    const city = CITIES.find(c => c.name === cityName);
+    const city = getCityByName(cityName);
     if (!city) {
       setPolicyData(null);
+      setPolicyError('不支持该城市的产假政策');
       return;
     }
     
@@ -67,8 +62,16 @@ export const Calculator: React.FC = () => {
     fetchCityPolicy(cityName);
   };
 
+  // 初始化时加载默认城市政策
+  useEffect(() => {
+    if (state.cityName) {
+      fetchCityPolicy(state.cityName);
+    }
+  }, []);
+
   // 处理计算按钮点击
   const handleCalculate = async () => {
+    if (!isValid) return;
     await calculate();
   };
 
@@ -78,57 +81,80 @@ export const Calculator: React.FC = () => {
     setShowAdvancedOptions(false);
   };
 
-  // 格式化日期显示 - 保留供后续使用
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return format(date, 'yyyy年MM月dd日', { locale: zhCN });
-  };
 
-  // 准备政策详情
-  const policyDetails = React.useMemo(() => {
-    if (!policyData) return [];
+
+  // 准备政策详情 - 按类别分组
+  interface PolicyDetails {
+    standardLeave: string;
+    dystociaLeave: string | null;
+    multipleBirthLeave: string | null;
+    abortionLeave: string | null;
+    paternityLeave: string | null;
+    allowancePolicy?: string;
+  }
+
+  const policyDetails = React.useMemo<PolicyDetails | null>(() => {
+    if (!policyData) return null;
     
-    const details: string[] = [
-      `标准产假: ${policyData.statutoryPolicy.leaveDays}天`,
-    ];
+    const details: PolicyDetails = {
+      // 标准产假
+      standardLeave: `标准产假: ${policyData.statutoryPolicy.leaveDays}天`,
+      
+      // 难产假
+      dystociaLeave: policyData.dystociaPolicy.standardLeaveDays > 0 
+        ? `难产假: ${policyData.dystociaPolicy.standardLeaveDays}天` 
+        : null,
+      
+      // 多胞胎假
+      multipleBirthLeave: policyData.moreInfantPolicy.extraInfantLeaveDays > 0
+        ? `每多一个婴儿增加${policyData.moreInfantPolicy.extraInfantLeaveDays}天`
+        : null,
+      
+      // 流产假
+      abortionLeave: policyData.abortionPolicy ? (
+        `流产假: 早期${policyData.abortionPolicy.earlyPregnancyLeave}天, ` +
+        `中期${policyData.abortionPolicy.midTermPregnancyLeave}天, ` +
+        `晚期${policyData.abortionPolicy.latePregnancyLeave}天`
+      ) : null,
+      
+      // 陪产假
+      paternityLeave: policyData.paternityLeavePolicy
+        ? `陪产假: ${policyData.paternityLeavePolicy.leaveDays}天`
+        : null,
+    };
 
-    if (policyData.dystociaPolicy.standardLeaveDays > 0) {
-      details.push(`难产假: ${policyData.dystociaPolicy.standardLeaveDays}天`);
-    }
-
-    if (policyData.moreInfantPolicy.extraInfantLeaveDays > 0) {
-      details.push(`多胞胎假: 每多一个婴儿增加${policyData.moreInfantPolicy.extraInfantLeaveDays}天`);
-    }
-
+    // 添加生育津贴政策
     if (policyData.allowancePolicy) {
-      details.push(`生育津贴: 按${policyData.allowancePolicy.numerator}/${policyData.allowancePolicy.denominator}比例发放`);
+      details.allowancePolicy = `生育津贴: 按${policyData.allowancePolicy.numerator}/${policyData.allowancePolicy.denominator}比例发放`;
     }
 
     return details;
   }, [policyData]);
 
-  // 准备计算结果
-  const calculationResult = React.useMemo(() => {
-    if (!result) return null;
+  // 计算完成度百分比
+  const completionPercentage = React.useMemo(() => {
+    let filledFields = 0;
+    const totalFields = 3; // 必填字段数量
     
-    // Transform the result to match the expected CalculationResult type
-    const transformedResult: any = {
-      totalLeaveDays: result.totalDays || 0,
-      startDate: result.startDate ? formatDate(new Date(result.startDate)) : '',
-      endDate: result.endDate ? formatDate(new Date(result.endDate)) : '',
-      policyDetails,
-    };
+    if (state.childBirthdate) filledFields++;
+    if (state.leaveStartDate) filledFields++;
+    if (state.cityName) filledFields++;
     
-    // Handle allowance transformation if it exists
-    if (result.allowanceDetail) {
-      transformedResult.allowance = {
-        amount: result.allowanceDetail.allowance || 0,
-        // Add other allowance details as needed
-      };
-    }
-    
-    return transformedResult;
-  }, [result, policyDetails]);
+    return Math.round((filledFields / totalFields) * 100);
+  }, [state.childBirthdate, state.leaveStartDate, state.cityName]);
+
+  // 获取下一步提示
+  const nextStepHint = React.useMemo(() => {
+    if (!state.childBirthdate) return '请先选择预产期';
+    if (!state.leaveStartDate) return '请选择休假开始日期';
+    if (!state.cityName) return '请选择所在城市';
+    return '';
+  }, [state.childBirthdate, state.leaveStartDate, state.cityName]);
+
+  // 检查表单是否有效
+  const isValid = React.useMemo(() => {
+    return state.childBirthdate && state.leaveStartDate && state.cityName;
+  }, [state.childBirthdate, state.leaveStartDate, state.cityName]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -215,9 +241,9 @@ export const Calculator: React.FC = () => {
                     disabled={isLoadingPolicy}
                   >
                     <option value="">请选择城市</option>
-                    {CITIES.map((city: City) => (
-                      <option key={city.code} value={city.name}>
-                        {city.name}
+                    {SUPPORTED_CITIES.map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name} ({city.province})
                       </option>
                     ))}
                   </select>
@@ -227,14 +253,13 @@ export const Calculator: React.FC = () => {
                   {policyError && (
                     <p className="mt-1 text-sm text-red-500">{policyError}</p>
                   )}
-                  {policyData && (
+                  {policyDetails && (
                     <div className="mt-2 p-2 bg-blue-50 rounded text-sm text-blue-700">
-                      <p className="font-medium">当前城市政策:</p>
-                      <ul className="list-disc list-inside">
-                        {policyDetails.map((detail, index) => (
-                          <li key={index}>{detail}</li>
-                        ))}
-                      </ul>
+                      <p className="font-medium">标准产假:</p>
+                      <p>{policyDetails.standardLeave}</p>
+                      {policyDetails.allowancePolicy && (
+                        <p className="mt-1">{policyDetails.allowancePolicy}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -252,6 +277,11 @@ export const Calculator: React.FC = () => {
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     placeholder="1"
                   />
+                  {policyDetails?.multipleBirthLeave && (
+                    <div className="mt-1 text-sm text-blue-600">
+                      {policyDetails.multipleBirthLeave}
+                    </div>
+                  )}
                 </div>
 
                 {/* 分娩顺序 */}
@@ -308,6 +338,9 @@ export const Calculator: React.FC = () => {
                     />
                     <label htmlFor="abortion" className="ml-2 block text-sm text-gray-700">
                       是否流产
+                      {policyDetails?.abortionLeave && (
+                        <span className="block mt-1 text-blue-600">{policyDetails.abortionLeave}</span>
+                      )}
                     </label>
                   </div>
 
@@ -334,6 +367,9 @@ export const Calculator: React.FC = () => {
                     />
                     <label htmlFor="difficultBirth" className="ml-2 text-sm text-gray-700">
                       难产（剖腹产、产钳助产等）
+                      {policyDetails?.dystociaLeave && (
+                        <span className="ml-2 text-blue-600">{policyDetails.dystociaLeave}</span>
+                      )}
                     </label>
                   </div>
 
@@ -405,10 +441,9 @@ export const Calculator: React.FC = () => {
             <div className="flex space-x-4">
               <Button
                 onClick={handleCalculate}
-                disabled={!isValid}
-                loading={isCalculating}
-                size="large"
-                className="flex-1"
+                disabled={!isValid || isCalculating}
+                isLoading={isCalculating}
+                className="flex-1 px-6 py-3 text-base"
               >
                 {isCalculating ? '计算中...' : '计算产假'}
               </Button>
@@ -416,38 +451,30 @@ export const Calculator: React.FC = () => {
               <Button
                 onClick={handleReset}
                 variant="ghost"
-                size="large"
+                className="px-6 py-3 text-base"
               >
                 重置
               </Button>
             </div>
 
             {/* 错误信息 */}
-            {errors.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">请修正以下问题：</h3>
-                    <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
-                      {errors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+            {calculationErrors && calculationErrors.length > 0 && (
+              <div className="mt-4 p-4 bg-red-50 rounded-md">
+                <h4 className="text-sm font-medium text-red-800">请解决以下问题：</h4>
+                <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
+                  {calculationErrors.map((error: string, index: number) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
               </div>
             )}
+
           </div>
 
           {/* 右侧：计算结果 */}
           <div className="space-y-6">
-            {calculationResult ? (
-              <ResultDisplay result={calculationResult} />
+            {result ? (
+              <ResultDisplay result={result} />
             ) : (
               <div className="bg-white rounded-lg shadow p-8 text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
