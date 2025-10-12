@@ -61,6 +61,11 @@ export interface AllowancePolicy {
   govAllowance: number;
 }
 
+export interface BonusLeavePolicy {
+  description: string;
+  days: number;
+}
+
 export interface CreatePolicyPayload {
   cityName: string;
   statutoryPolicy: StatutoryPolicy;
@@ -69,4 +74,5 @@ export interface CreatePolicyPayload {
   otherExtendedPolicy: OtherExtendedPolicy;
   abortionPolicy: AbortionPolicy;
   allowancePolicy: AllowancePolicy;
+  bonusLeavePolicies: BonusLeavePolicy[];
 }

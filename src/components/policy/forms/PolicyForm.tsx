@@ -1,21 +1,21 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useForm, SubmitHandler, useFieldArray, useWatch } from 'react-hook-form';
 import { CreatePolicyPayload } from '../../../types/policyApi';
-import { 
-  TextField, 
-  Checkbox, 
-  FormControl, 
-  FormControlLabel, 
-  InputLabel, 
-  Select, 
+import {
+  TextField,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  Select,
   MenuItem,
-  Typography, 
-  IconButton, 
-  Button, 
-  Paper, 
-  Grid, 
-  Card, 
-  CardContent, 
+  Typography,
+  IconButton,
+  Button,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
   CardHeader,
   Divider,
   Box
@@ -36,29 +36,30 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
   initialData = {},
   // loading state is managed by the parent component
 }) => {
-  const defaultValues: CreatePolicyPayload = {
+  // Memoize default values to prevent recreation on every render
+  const defaultValues = useMemo<CreatePolicyPayload>(() => ({
     cityName: '',
     statutoryPolicy: {
       leaveDays: 98,
-      calendarDay: true, // 默认日历日
+      calendarDay: true,
       maxLeaveDays: 180,
       bonusLeaveDays: 0,
     },
     dystociaPolicy: {
-      calendarDay: true, // 默认日历日
+      calendarDay: true,
       standardLeaveDays: 15,
     },
     moreInfantPolicy: {
       leaveDays: 15,
-      calendarDay: true, // 默认日历日
+      calendarDay: true,
     },
     otherExtendedPolicy: {
       leaveDays: 0,
-      calendarDay: true, // 默认日历日
+      calendarDay: true,
       maxLeaveDays: 180,
     },
     abortionPolicy: {
-      calendarDay: true, // 默认日历日
+      calendarDay: true,
       abortionRules: [
         {
           ectopicPregnancy: true,
@@ -88,25 +89,40 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
       },
       govAllowance: 0,
     },
+    bonusLeavePolicies: [],
     ...initialData,
-  };
+  }), [initialData]);
 
-  const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<CreatePolicyPayload>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
+    getValues,
+    watch,
+  } = useForm<CreatePolicyPayload>({
     defaultValues,
   });
 
-  const { fields: corpSalaryFields, append: appendCorpSalary, remove: removeCorpSalary } = 
+  const { fields: corpSalaryFields, append: appendCorpSalary, remove: removeCorpSalary } =
     useFieldArray({
       control,
       name: 'allowancePolicy.corpSalaryDetailList',
     });
 
-  const { fields: abortionRuleFields, append: appendAbortionRule, remove: removeAbortionRule } = 
+  const { fields: abortionRuleFields, append: appendAbortionRule, remove: removeAbortionRule } =
     useFieldArray({
       control,
       name: 'abortionPolicy.abortionRules',
     });
-    
+
+  const { fields: bonusLeaveFields, append: appendBonusLeave, remove: removeBonusLeave } =
+    useFieldArray({
+      control,
+      name: 'bonusLeavePolicies',
+    });
+
   // Watch the forceCompensation value
   const forceCompensationValue = useWatch({
     control,
@@ -119,26 +135,46 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
     control,
   });
 
-  // Handle checkbox change for forceCompensation
-  const handleForceCompensationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.checked ? 'Yes' : 'No';
-    // Update the form value using setValue
+  // Memoize event handlers with useCallback
+  const handleForceCompensationChange = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    const value = event.target.value as string;
     setValue('allowancePolicy.differenceCompensationRule.forceCompensation', value, { shouldValidate: true });
-  };
+    // Clear other compensation rules when not 'Only if'
+    if (value !== 'Only if') {
+      setValue('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc', []);
+    }
+  }, [setValue]);
 
-  const onSubmitHandler: SubmitHandler<CreatePolicyPayload> = async (data) => {
+  const handleAddRuleDescription = useCallback(() => {
+    const currentRules = getValues('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc') || [];
+    setValue('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc', [...currentRules, ''], { shouldValidate: true });
+  }, [getValues, setValue]);
+
+  const handleRuleDescriptionChange = useCallback((index: number, value: string) => {
+    const currentRules = [...(getValues('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc') || [])];
+    currentRules[index] = value;
+    setValue('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc', currentRules, { shouldValidate: true });
+  }, [getValues, setValue]);
+
+  const handleRemoveRuleDescription = useCallback((index: number) => {
+    const currentRules = [...(getValues('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc') || [])];
+    currentRules.splice(index, 1);
+    setValue('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc', currentRules, { shouldValidate: true });
+  }, [getValues, setValue]);
+
+  const onSubmitHandler: SubmitHandler<CreatePolicyPayload> = useCallback(async (data) => {
     await onSubmit(data);
-  };
+  }, [onSubmit]);
 
-  // Styled components for better organization
-  const SectionCard = styled(Card)(({ theme }) => ({
+  // Memoize styled components to prevent recreation on every render
+  const SectionCard = useMemo(() => styled(Card)(({ theme }) => ({
     marginBottom: theme.spacing(3),
     '&:last-child': {
       marginBottom: 0
     }
-  }));
+  })), []);
 
-  const SectionHeader = styled(CardHeader)(({ theme }) => ({
+  const SectionHeader = useMemo(() => styled(CardHeader)(({ theme }) => ({
     backgroundColor: theme.palette.grey[100],
     padding: theme.spacing(1.5, 2),
     '& .MuiCardHeader-title': {
@@ -146,23 +182,23 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
       fontWeight: 500,
       color: theme.palette.text.primary
     }
-  }));
+  })), []);
 
-  const FormRow = styled(Box)(({ theme }) => ({
+  const FormRow = useMemo(() => styled(Box)(({ theme }) => ({
     display: 'flex',
     gap: theme.spacing(2),
     marginBottom: theme.spacing(2),
     '& > *': {
       flex: 1
     }
-  }));
+  })), []);
 
-  const FormSection = styled(Box)(({ theme }) => ({
+  const FormSection = useMemo(() => styled(Box)(({ theme }) => ({
     marginBottom: theme.spacing(4),
     '&:last-child': {
       marginBottom: 0
     }
-  }));
+  })), []);
 
   return (
     <form id="policy-form" onSubmit={handleSubmit(onSubmitHandler)}>
@@ -185,6 +221,30 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           </CardContent>
         </SectionCard>
 
+        {/* Maximum Maternity Leave Days Section */}
+        <SectionCard elevation={0} variant="outlined">
+          <SectionHeader title="最长产假天数" />
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="最长产假天数"
+                  type="number"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  {...register('statutoryPolicy.maxLeaveDays', {
+                    valueAsNumber: true,
+                    required: '必填',
+                  })}
+                  error={!!errors.statutoryPolicy?.maxLeaveDays}
+                  helperText={errors.statutoryPolicy?.maxLeaveDays?.message}
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </SectionCard>
+
         {/* Statutory Policy Section */}
         <SectionCard elevation={0} variant="outlined">
           <SectionHeader title="法定产假政策" />
@@ -203,21 +263,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   })}
                   error={!!errors.statutoryPolicy?.leaveDays}
                   helperText={errors.statutoryPolicy?.leaveDays?.message}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="最长产假天数"
-                  type="number"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  {...register('statutoryPolicy.maxLeaveDays', {
-                    valueAsNumber: true,
-                    required: '必填',
-                  })}
-                  error={!!errors.statutoryPolicy?.maxLeaveDays}
-                  helperText={errors.statutoryPolicy?.maxLeaveDays?.message}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -249,9 +294,9 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   variant="outlined"
                   size="small"
                   fullWidth
-                  {...register('dystociaPolicy.standardLeaveDays', { 
-                    valueAsNumber: true, 
-                    required: '必填' 
+                  {...register('dystociaPolicy.standardLeaveDays', {
+                    valueAsNumber: true,
+                    required: '必填'
                   })}
                   error={!!errors.dystociaPolicy?.standardLeaveDays}
                   helperText={errors.dystociaPolicy?.standardLeaveDays?.message}
@@ -273,11 +318,227 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
             </Grid>
           </CardContent>
         </SectionCard>
+        {/* Abortion Policy Section */}
+        <SectionCard elevation={0} variant="outlined">
+          <SectionHeader
+            title="流产政策"
+            action={
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() =>
+                  appendAbortionRule({
+                    ectopicPregnancy: false,
+                    minRegnancyDays: 0,
+                    maxRegnancyDays: 0,
+                    minLeaveDays: 0,
+                    maxLeaveDays: 0,
+                    leaveDays: 0,
+                  })
+                }
+              >
+                添加流产规则
+              </Button>
+            }
+          />
+          <CardContent>
+            {abortionRuleFields.map((field, index) => (
+              <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1, position: 'relative' }}>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => removeAbortionRule(index)}
+                  disabled={abortionRuleFields.length <= 1}
+                  sx={{ position: 'absolute', top: 8, right: 8 }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          {...register(`abortionPolicy.abortionRules.${index}.ectopicPregnancy` as const)}
+                          defaultChecked={field.ectopicPregnancy}
+                          size="small"
+                        />
+                      }
+                      label="宫外孕"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField
+                      label="最小怀孕天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`abortionPolicy.abortionRules.${index}.minRegnancyDays` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                      })}
+                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.minRegnancyDays}
+                      helperText={
+                        errors.abortionPolicy?.abortionRules?.[index]?.minRegnancyDays?.message
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField
+                      label="最大怀孕天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`abortionPolicy.abortionRules.${index}.maxRegnancyDays` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                      })}
+                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxRegnancyDays}
+                      helperText={
+                        errors.abortionPolicy?.abortionRules?.[index]?.maxRegnancyDays?.message
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField
+                      label="最小休假天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`abortionPolicy.abortionRules.${index}.minLeaveDays` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                      })}
+                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays}
+                      helperText={
+                        errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays?.message
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField
+                      label="最大休假天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`abortionPolicy.abortionRules.${index}.maxLeaveDays` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                      })}
+                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays}
+                      helperText={
+                        errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays?.message
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField
+                      label="休假天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`abortionPolicy.abortionRules.${index}.leaveDays` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                      })}
+                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.leaveDays}
+                      helperText={
+                        errors.abortionPolicy?.abortionRules?.[index]?.leaveDays?.message
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+          </CardContent>
+        </SectionCard>
+        {/* Bonus Leave Section */}
+        <SectionCard elevation={0} variant="outlined">
+          <SectionHeader
+            title="奖励假政策"
+            action={
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => appendBonusLeave({ description: '', days: 0 })}
+              >
+                添加奖励假
+              </Button>
+            }
+          />
+          <CardContent>
+            {bonusLeaveFields.map((field, index) => (
+              <Box
+                key={field.id}
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  position: 'relative'
+                }}
+              >
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => removeBonusLeave(index)}
+                  sx={{ position: 'absolute', top: 8, right: 8 }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={8}>
+                    <TextField
+                      label="奖励描述"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`bonusLeavePolicies.${index}.description` as const, {
+                        required: '必填',
+                      })}
+                      error={!!errors.bonusLeavePolicies?.[index]?.description}
+                      helperText={errors.bonusLeavePolicies?.[index]?.description?.message}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      label="奖励天数"
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      {...register(`bonusLeavePolicies.${index}.days` as const, {
+                        valueAsNumber: true,
+                        required: '必填',
+                        min: { value: 0, message: '必须大于等于0' },
+                      })}
+                      error={!!errors.bonusLeavePolicies?.[index]?.days}
+                      helperText={errors.bonusLeavePolicies?.[index]?.days?.message}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+            {bonusLeaveFields.length === 0 && (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 2 }}>
+                暂无奖励假政策，点击上方按钮添加
+              </Typography>
+            )}
+          </CardContent>
+        </SectionCard>
 
         {/* Allowance Policy Section */}
         <SectionCard elevation={0} variant="outlined">
-          <SectionHeader 
-            title="津贴政策" 
+          <SectionHeader
+            title="津贴政策"
             action={
               <Button
                 variant="outlined"
@@ -401,174 +662,105 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                 />
               </Grid>
               <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={forceCompensationValue === 'Yes'}
-                      onChange={handleForceCompensationChange}
-                      size="small"
-                    />
-                  }
-                  label="强制补足差额"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="差额补足规则描述"
-                  variant="outlined"
-                  size="small"
+                <FormControl
                   fullWidth
-                  multiline
-                  rows={2}
-                  {...register('allowancePolicy.differenceCompensationRule.ruleDescription')}
-                  error={!!errors.allowancePolicy?.differenceCompensationRule?.ruleDescription}
-                  helperText={
-                    errors.allowancePolicy?.differenceCompensationRule?.ruleDescription?.message
-                  }
-                />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </SectionCard>
-
-        {/* Abortion Policy Section */}
-        <SectionCard elevation={0} variant="outlined">
-          <SectionHeader 
-            title="流产政策"
-            action={
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() =>
-                  appendAbortionRule({
-                    ectopicPregnancy: false,
-                    minRegnancyDays: 0,
-                    maxRegnancyDays: 0,
-                    minLeaveDays: 0,
-                    maxLeaveDays: 0,
-                    leaveDays: 0,
-                  })
-                }
-              >
-                添加流产规则
-              </Button>
-            }
-          />
-          <CardContent>
-            {abortionRuleFields.map((field, index) => (
-              <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1, position: 'relative' }}>
-                <IconButton
                   size="small"
-                  color="error"
-                  onClick={() => removeAbortionRule(index)}
-                  disabled={abortionRuleFields.length <= 1}
-                  sx={{ position: 'absolute', top: 8, right: 8 }}
+                  margin="normal"
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      height: '40px', // Match height with other form fields
+                      display: 'flex',
+                      alignItems: 'center'
+                    }
+                  }}
                 >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          {...register(`abortionPolicy.abortionRules.${index}.ectopicPregnancy` as const)}
-                          defaultChecked={field.ectopicPregnancy}
+                  <InputLabel id="force-compensation-label">强制补足差额</InputLabel>
+                  <Select
+                    labelId="force-compensation-label"
+                    label="强制补足差额"
+                    value={forceCompensationValue || 'No'}
+                    onChange={handleForceCompensationChange}
+                    sx={{
+                      '& .MuiSelect-select': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '100%',
+                        minHeight: '24px' // Ensure minimum height for the select
+                      }
+                    }}
+                  >
+                    <MenuItem value="Yes">是 (Yes)</MenuItem>
+                    <MenuItem value="No">否 (No)</MenuItem>
+                    <MenuItem value="Only if">仅满足以下条件 (Only if)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {forceCompensationValue === 'Only if' && (
+                <Grid item xs={12}>
+                  <Box mb={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      条件规则描述 (Condition Rules)
+                    </Typography>
+
+                    {(getValues('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc') || []).map((rule: string, index: number) => (
+                      <Box key={index} display="flex" alignItems="center" mb={1}>
+                        <TextField
+                          fullWidth
+                          variant="outlined"
                           size="small"
+                          value={rule}
+                          onChange={(e) => handleRuleDescriptionChange(index, e.target.value)}
+                          placeholder="输入条件规则描述"
                         />
-                      }
-                      label="宫外孕"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="最小怀孕天数"
-                      type="number"
+                        <IconButton
+                          onClick={() => handleRemoveRuleDescription(index)}
+                          size="small"
+                          color="error"
+                          sx={{ ml: 1 }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+
+                    <Button
                       variant="outlined"
                       size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.minRegnancyDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.minRegnancyDays}
-                      helperText={
-                        errors.abortionPolicy?.abortionRules?.[index]?.minRegnancyDays?.message
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="最大怀孕天数"
-                      type="number"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.maxRegnancyDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxRegnancyDays}
-                      helperText={
-                        errors.abortionPolicy?.abortionRules?.[index]?.maxRegnancyDays?.message
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="最小休假天数"
-                      type="number"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.minLeaveDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays}
-                      helperText={
-                        errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays?.message
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="最大休假天数"
-                      type="number"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.maxLeaveDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays}
-                      helperText={
-                        errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays?.message
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                      label="休假天数"
-                      type="number"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.leaveDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.leaveDays}
-                      helperText={
-                        errors.abortionPolicy?.abortionRules?.[index]?.leaveDays?.message
-                      }
-                    />
-                  </Grid>
+                      startIcon={<AddIcon />}
+                      onClick={handleAddRuleDescription}
+                      sx={{ mt: 1 }}
+                    >
+                      添加条件规则 (Add Condition Rule)
+                    </Button>
+                  </Box>
                 </Grid>
-              </Box>
-            ))}
+              )}
+
+              {forceCompensationValue === 'Only if' && (
+                <Grid item xs={12}>
+                  <Box mb={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      规则描述 (Rule Description)
+                    </Typography>
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={2}
+                      placeholder="输入规则描述"
+                      {...register('allowancePolicy.differenceCompensationRule.ruleDescription')}
+                      error={!!errors.allowancePolicy?.differenceCompensationRule?.ruleDescription}
+                      helperText={
+                        errors.allowancePolicy?.differenceCompensationRule?.ruleDescription?.message ||
+                        '此描述将作为一般规则说明'
+                      }
+                    />
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
           </CardContent>
         </SectionCard>
       </Box>
