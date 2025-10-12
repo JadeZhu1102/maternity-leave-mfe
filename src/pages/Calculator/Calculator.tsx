@@ -11,6 +11,7 @@ import { ResultDisplay } from '../../components/calculator/ResultDisplay';
 import { DatePicker } from '../../components/common/DatePicker';
 import { Button } from '../../components/common/Button';
 
+
 /**
  * 产假计算器页面组件
  * 提供完整的产假计算功能，包括参数输入、计算和结果展示
@@ -32,6 +33,7 @@ export const Calculator: React.FC = () => {
   const [policyData, setPolicyData] = useState<PolicyData | null>(null);
   const [isLoadingPolicy, setIsLoadingPolicy] = useState(false);
   const [policyError, setPolicyError] = useState<string | null>(null);
+
 
   // 获取城市政策
   const fetchCityPolicy = async (cityName: string) => {
@@ -313,21 +315,8 @@ export const Calculator: React.FC = () => {
               </button>
 
               <div className="mt-6 space-y-4">
-                {/* 多胞胎 */}
-                <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <input
-                      id="dystocia"
-                      type="checkbox"
-                      checked={state.dystocia}
-                      onChange={(e) => updateState({ dystocia: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="dystocia" className="ml-2 block text-sm text-gray-700">
-                      是否难产
-                    </label>
-                  </div>
-
+                {/* 流产选项 */}
+                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
                   <div className="flex items-center">
                     <input
                       id="abortion"
@@ -336,27 +325,19 @@ export const Calculator: React.FC = () => {
                       onChange={(e) => updateState({ abortion: e.target.checked })}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="abortion" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="abortion" className="ml-2 block text-sm font-medium text-gray-700">
                       是否流产
-                      {policyDetails?.abortionLeave && (
-                        <span className="block mt-1 text-blue-600">{policyDetails.abortionLeave}</span>
-                      )}
                     </label>
                   </div>
+                  {state.abortion && policyDetails?.abortionLeave && (
+                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                      {policyDetails.abortionLeave}
+                    </div>
+                  )}
+                </div>
 
-                  <div className="flex items-center">
-                    <input
-                      id="ectopicPregnancy"
-                      type="checkbox"
-                      checked={state.ectopicPregnancy}
-                      onChange={(e) => updateState({ ectopicPregnancy: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="ectopicPregnancy" className="ml-2 block text-sm text-gray-700">
-                      是否宫外孕
-                    </label>
-                  </div>
-                  {/* 难产 */}
+                {/* 难产选项 */}
+                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -365,14 +346,19 @@ export const Calculator: React.FC = () => {
                       onChange={(e) => updateState({ isDifficultBirth: e.target.checked })}
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="difficultBirth" className="ml-2 text-sm text-gray-700">
+                    <label htmlFor="difficultBirth" className="ml-2 block text-sm font-medium text-gray-700">
                       难产（剖腹产、产钳助产等）
-                      {policyDetails?.dystociaLeave && (
-                        <span className="ml-2 text-blue-600">{policyDetails.dystociaLeave}</span>
-                      )}
                     </label>
                   </div>
+                  {state.isDifficultBirth && policyDetails?.dystociaLeave && (
+                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                      {policyDetails.dystociaLeave}
+                    </div>
+                  )}
+                </div>
 
+                {/* 多胞胎选项 */}
+                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -381,10 +367,15 @@ export const Calculator: React.FC = () => {
                       onChange={(e) => updateState({ isMultipleBirth: e.target.checked })}
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="multipleBirth" className="ml-2 text-sm text-gray-700">
+                    <label htmlFor="multipleBirth" className="ml-2 block text-sm font-medium text-gray-700">
                       多胞胎（双胞胎、三胞胎等）
                     </label>
                   </div>
+                  {state.isMultipleBirth && policyDetails?.multipleBirthLeave && (
+                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                      {policyDetails.multipleBirthLeave}
+                    </div>
+                  )}
                 </div>
 
                 {/* 平均薪资 */}
