@@ -224,27 +224,8 @@ const getExtraTypeLabel = (type: string): string => {
 export const validateCalculationParams = (state: CalculatorState): string[] => {
   const errors: string[] = [];
 
-  if (!state.startDate) {
-    errors.push('请选择预产期或生产日期');
-  }
-
-  if (!state.employmentDate) {
-    errors.push('请选择入职日期');
-  }
-
   if (!state.region) {
     errors.push('请选择所在地区');
-  }
-
-  if (state.startDate && state.employmentDate) {
-    if (state.startDate <= state.employmentDate) {
-      errors.push('生产日期应晚于入职日期');
-    }
-
-    const workDays = Math.floor((state.startDate.getTime() - state.employmentDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (workDays < 180) { // 一般要求连续缴费6个月以上
-      errors.push('入职时间过短，可能不满足享受生育津贴的条件');
-    }
   }
 
   return errors;
