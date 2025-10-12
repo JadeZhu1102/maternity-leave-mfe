@@ -219,7 +219,8 @@ export const Calculator: React.FC = () => {
                   onChange={(date) => updateState({ childBirthdate: date })}
                   required
                   minDate={new Date()}
-                  helpText="请选择预产期"
+                  placeholder="请选择预产期"
+                  error={!state.childBirthdate && (calculationErrors.includes('请选择预产期') || calculationErrors.includes('请选择休假开始日期')) ? '请选择预产期' : undefined}
                 />
 
                 {/* 休假开始日期 */}
@@ -229,7 +230,8 @@ export const Calculator: React.FC = () => {
                   onChange={(date) => updateState({ leaveStartDate: date })}
                   required
                   minDate={state.childBirthdate || new Date()}
-                  helpText="请选择休假开始日期"
+                  placeholder="请选择休假开始日期"
+                  error={!state.leaveStartDate && (calculationErrors.includes('请选择休假开始日期') || calculationErrors.includes('请选择预产期')) ? '请选择休假开始日期' : undefined}
                 />
 
                 {/* 所在城市 */}

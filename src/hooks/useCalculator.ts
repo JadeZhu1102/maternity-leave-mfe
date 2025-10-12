@@ -106,8 +106,8 @@ export const useCalculator = () => {
   }, []);
 
   /**
-   * 执行产假计算
-   * Execute maternity leave calculation
+   * 执行产假计算（本地模拟）
+   * Execute maternity leave calculation (local mock)
    */
   const handleCalculate = useCallback(async () => {
     if (!validateForm()) return;
@@ -119,98 +119,90 @@ export const useCalculator = () => {
     setErrors([]);
 
     try {
-      // 准备请求参数
-      const requestData: any = {
-        staffName: state.staffName,
-        childBirthdate: state.childBirthdate?.toISOString() || '',
-        infantNumber: infantNumber,
-        deliverySequence: state.deliverySequence,
-        abortion: state.abortion,
-        abortionType: state.abortionType || undefined,
-        dystocia: state.dystocia,
-        dystociaType: state.dystociaType || undefined,
-        cityName: state.cityName,
-        companyName: state.companyName,
-        leaveStartDate: state.leaveStartDate?.toISOString() || '',
-        calendarCode: state.calendarCode,
-        regnancyDays: state.regnancyDays,
-        ectopicPregnancy: state.ectopicPregnancy,
-        recommendAbortionLeaveDays: state.recommendAbortionLeaveDays,
-        dystociaCodeList: state.dystociaCodeList,
-      };
-
-      // 调用基础API计算产假日期
-      const leaveResponse = await calculateLeaveDates(requestData);
-      let result = mapApiResponseToResult(leaveResponse);
+      // 模拟API延迟
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // 如果用户输入了薪资信息，则调用津贴计算API
-      if ((state.averageSalary !== null || state.currentSalary !== null) && state.leaveStartDate) {
-        try {
-          // 确保休假结束日期存在，如果API返回的leaveEndDate不存在，则根据休假开始日期和标准产假天数计算
-          const leaveEndDate = result.leaveDetail?.leaveEndDate || 
-            (() => {
-              const endDate = new Date(state.leaveStartDate);
-              // 标准产假天数（根据城市政策可能会有所不同）
-              const standardMaternityLeaveDays = 98; // 默认98天
-              endDate.setDate(endDate.getDate() + standardMaternityLeaveDays);
-              return formatDateForDisplay(endDate);
-            })();
-          
-          const allowanceRequest: any = {
-            averageSalary: state.averageSalary || 0, // Default to 0 if undefined
-            currentSalary: state.currentSalary || 0,
-            hitForceCompensationRule: state.hitForceCompensationRule,
-            leaveEndDate: leaveEndDate,
-            staffName: state.staffName,
-            childBirthdate: state.childBirthdate?.toISOString() || '',
-            infantNumber: infantNumber,
-            deliverySequence: state.deliverySequence,
-            abortion: state.abortion,
-            dystocia: state.dystocia,
-            cityName: state.cityName,
-            companyName: state.companyName,
-            leaveStartDate: state.leaveStartDate?.toISOString() || '',
-            calendarCode: state.calendarCode,
-            regnancyDays: state.regnancyDays,
-            ectopicPregnancy: state.ectopicPregnancy,
-            recommendAbortionLeaveDays: state.recommendAbortionLeaveDays,
-            dystociaCodeList: state.dystociaCodeList,
-          };
-          
-          console.log('Calling allowance API with data:', allowanceRequest);
-          const allowanceResponse = await calculateAllowance(allowanceRequest);
-          
-          // 合并津贴计算结果
-          result = {
-            ...result,
-            allowanceDetail: {
-              ...result.allowanceDetail,
-              ...(allowanceResponse.allowanceDetail || {})
-            },
-            calculateComments: {
-              ...result.calculateComments,
-              descriptionList: [
-                ...(result.calculateComments?.descriptionList || []),
-                ...(allowanceResponse.calculateComments?.descriptionList || [])
-              ]
-            }
-          };
-        } catch (error) {
-          // 如果津贴计算失败，只记录错误，不中断主流程
-          console.error('津贴计算失败:', error);
-          setErrors(prev => [
-            ...prev,
-            `产假日期计算成功，但津贴计算失败: ${error instanceof Error ? error.message : '未知错误'}`
-          ]);
-        }
+      // 基础产假天数
+      let leaveDays = 98; // 标准产假
+      const descriptionList: string[] = [];
+      
+      // 根据条件调整产假天数
+      if (infantNumber > 1) {
+        leaveDays += 15; // 多胞胎增加15天
+        descriptionList.push(`多胞胎增加15天产假`);
       }
       
+      if (state.dystocia) {
+        leaveDays += 15; // 难产增加15天
+        descriptionList.push(`难产增加15天产假`);
+      }
+      
+      // 计算结束日期
+      const startDate = state.leaveStartDate || new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + leaveDays);
+      
+      // 格式化日期
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      
+      // 构建结果对象
+      let result: any = {
+        leaveDetail: {
+          leaveStartDate: formatDate(startDate),
+          leaveEndDate: formatDate(endDate),
+          currentLeaveDays: leaveDays
+        },
+        allowanceDetail: {
+          allowance: 0,
+          compensation: 0,
+          firstMonthSalary: 0,
+          lastMonthSalary: 0,
+          otherMonthSalary: 0,
+          totalSalary: 0
+        },
+        calculateComments: {
+          descriptionList: [
+            `根据${state.cityName || '当前城市'}的产假政策`,
+            `标准产假为98天`,
+            ...descriptionList,
+            `总计产假: ${leaveDays}天`,
+            `休假时间: ${formatDate(startDate)} 至 ${formatDate(endDate)}`
+          ]
+        }
+      };
+      
+      // 如果提供了薪资信息，计算津贴
+      if (state.averageSalary !== null && state.averageSalary !== undefined && state.averageSalary > 0) {
+        const averageSalary = state.averageSalary;
+        const months = Math.ceil(leaveDays / 30);
+        const baseAllowance = averageSalary * months;
+        const compensation = state.hitForceCompensationRule ? baseAllowance * 0.3 : 0;
+        const totalAllowance = baseAllowance + compensation;
+        
+        result.allowanceDetail = {
+          allowance: Math.round(baseAllowance * 100) / 100,
+          compensation: Math.round(compensation * 100) / 100,
+          firstMonthSalary: Math.round(averageSalary * 100) / 100,
+          lastMonthSalary: Math.round(averageSalary * 100) / 100,
+          otherMonthSalary: Math.round(averageSalary * 100) / 100,
+          totalSalary: Math.round(totalAllowance * 100) / 100
+        };
+        
+        result.calculateComments.descriptionList.push(
+          `产假津贴计算基准: ${averageSalary}元/月`,
+          `产假津贴总额: ${Math.round(baseAllowance * 100) / 100}元`,
+          ...(state.hitForceCompensationRule ? 
+            [`符合生育津贴补偿条件，额外补偿30%: ${Math.round(compensation * 100) / 100}元`] : []),
+          `总计应发津贴: ${Math.round(totalAllowance * 100) / 100}元`
+        );
+      }
+      
+      // 设置结果
       setResult(result);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '计算过程中发生未知错误';
       setErrors([errorMessage]);
-      return null;
     } finally {
       setIsCalculating(false);
     }
@@ -257,6 +249,22 @@ export const useCalculator = () => {
       })),
     };
   };
+
+  /**
+   * 验证表单
+   * Validate form
+   */
+  const validateForm = useCallback((): boolean => {
+    const newErrors: string[] = [];
+    
+    if (!state.staffName) newErrors.push('请输入员工姓名');
+    if (!state.childBirthdate) newErrors.push('请选择预产期');
+    if (!state.cityName) newErrors.push('请选择所在城市');
+    if (!state.leaveStartDate) newErrors.push('请选择休假开始日期');
+    
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  }, [state]);
 
   /**
    * 检查表单是否有效
