@@ -10,6 +10,7 @@ import { fetchPolicyByCity, type PolicyData } from '../../services/policyService
 import { ResultDisplay } from '../../components/calculator/ResultDisplay';
 import { DatePicker } from '../../components/common/DatePicker';
 import { Button } from '../../components/common/Button';
+import type { AbortionRule } from '../../types/policyApi';
 
 
 /**
@@ -315,137 +316,320 @@ export const Calculator: React.FC = () => {
               </button>
 
               <div className="mt-6 space-y-4">
-                {/* 流产选项 */}
-                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <input
-                      id="abortion"
-                      type="checkbox"
-                      checked={state.abortion}
-                      onChange={(e) => updateState({ abortion: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="abortion" className="ml-2 block text-sm font-medium text-gray-700">
-                      是否流产
-                    </label>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-gray-700 mb-2">生产情况（单选）</div>
+                  
+                  {/* 正常生产（默认） */}
+                  <div className="space-y-2 p-4 bg-white rounded-md border border-gray-200">
+                    <div className="flex items-center">
+                      <input
+                        id="normalBirth"
+                        type="radio"
+                        name="productionSituation"
+                        checked={!state.abortion && !state.isDifficultBirth && !state.isMultipleBirth}
+                        onChange={() => updateState({
+                          abortion: false,
+                          isDifficultBirth: false,
+                          isMultipleBirth: false,
+                          abortionType: null,
+                          dystociaType: null
+                        })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <label htmlFor="normalBirth" className="ml-2 block text-sm font-medium text-gray-700">
+                        正常生产
+                      </label>
+                    </div>
+                    {!state.abortion && !state.isDifficultBirth && !state.isMultipleBirth && policyDetails?.standardLeave && (
+                      <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                        {policyDetails.standardLeave}
+                      </div>
+                    )}
                   </div>
-                  {state.abortion && policyDetails?.abortionLeave && (
-                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                      {policyDetails.abortionLeave}
+
+                  {/* 流产选项 */}
+                  <div className="space-y-2 p-4 bg-gray-50 rounded-md">
+                    <div className="flex items-center">
+                      <input
+                        id="abortion"
+                        type="radio"
+                        name="productionSituation"
+                        checked={state.abortion}
+                        onChange={(e) => updateState({ 
+                          abortion: e.target.checked,
+                          isDifficultBirth: false,
+                          isMultipleBirth: false,
+                          abortionType: e.target.checked ? 'early' : null,
+                          dystociaType: null
+                        })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <label htmlFor="abortion" className="ml-2 block text-sm font-medium text-gray-700">
+                        流产
+                      </label>
+                    </div>
+                  {state.abortion && (
+                    <div className="mt-2 pl-6 space-y-2">
+                      <div className="text-sm font-medium text-gray-700 mb-1">请选择流产类型：</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input
+                            id="earlyAbortion"
+                            type="radio"
+                            name="abortionType"
+                            checked={state.abortionType === 'early'}
+                            onChange={() => updateState({ abortionType: 'early' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="earlyAbortion" className="ml-2 block text-sm text-gray-700">
+                            早期流产（怀孕未满4个月）
+                            {policyData?.abortionPolicy?.abortionRules?.some((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays < 120) && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.abortionPolicy.abortionRules.find((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays < 120)?.leaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="midTermAbortion"
+                            type="radio"
+                            name="abortionType"
+                            checked={state.abortionType === 'mid'}
+                            onChange={() => updateState({ abortionType: 'mid' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="midTermAbortion" className="ml-2 block text-sm text-gray-700">
+                            中期流产（怀孕4-7个月）
+                            {policyData?.abortionPolicy?.abortionRules?.some((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays >= 120 && rule.maxRegnancyDays <= 210) && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.abortionPolicy.abortionRules.find((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays >= 120 && rule.maxRegnancyDays <= 210)?.leaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="lateAbortion"
+                            type="radio"
+                            name="abortionType"
+                            checked={state.abortionType === 'late'}
+                            onChange={() => updateState({ abortionType: 'late' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="lateAbortion" className="ml-2 block text-sm text-gray-700">
+                            晚期流产（怀孕7个月以上）
+                            {policyData?.abortionPolicy?.abortionRules?.some((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays > 210) && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.abortionPolicy.abortionRules.find((rule) => !rule.ectopicPregnancy && rule.minRegnancyDays > 210)?.leaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                      {policyDetails?.abortionLeave && (
+                        <div className="mt-2 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                          {policyDetails.abortionLeave}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* 难产选项 */}
-                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="difficultBirth"
-                      checked={state.isDifficultBirth || false}
-                      onChange={(e) => updateState({ isDifficultBirth: e.target.checked })}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="difficultBirth" className="ml-2 block text-sm font-medium text-gray-700">
-                      难产（剖腹产、产钳助产等）
-                    </label>
-                  </div>
-                  {state.isDifficultBirth && policyDetails?.dystociaLeave && (
-                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                      {policyDetails.dystociaLeave}
+                  {/* 难产选项 */}
+                  <div className="space-y-2 p-4 bg-gray-50 rounded-md">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="difficultBirth"
+                        name="productionSituation"
+                        checked={state.isDifficultBirth}
+                        onChange={(e) => updateState({ 
+                          isDifficultBirth: e.target.checked,
+                          abortion: false,
+                          isMultipleBirth: false,
+                          abortionType: null,
+                          dystociaType: e.target.checked ? 'cesarean' : null 
+                        })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <label htmlFor="difficultBirth" className="ml-2 block text-sm font-medium text-gray-700">
+                        难产
+                      </label>
+                    </div>
+                  {state.isDifficultBirth && (
+                    <div className="mt-2 pl-6 space-y-2">
+                      <div className="text-sm font-medium text-gray-700 mb-1">请选择难产类型：</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input
+                            id="cesarean"
+                            type="radio"
+                            name="dystociaType"
+                            checked={state.dystociaType === 'cesarean'}
+                            onChange={() => updateState({ dystociaType: 'cesarean' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="cesarean" className="ml-2 block text-sm text-gray-700">
+                            剖腹产
+                            {policyData?.dystociaPolicy && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.dystociaPolicy.standardLeaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="forceps"
+                            type="radio"
+                            name="dystociaType"
+                            checked={state.dystociaType === 'forceps'}
+                            onChange={() => updateState({ dystociaType: 'forceps' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="forceps" className="ml-2 block text-sm text-gray-700">
+                            产钳助产
+                            {policyData?.dystociaPolicy && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.dystociaPolicy.standardLeaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="otherDystocia"
+                            type="radio"
+                            name="dystociaType"
+                            checked={state.dystociaType === 'other'}
+                            onChange={() => updateState({ dystociaType: 'other' })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <label htmlFor="otherDystocia" className="ml-2 block text-sm text-gray-700">
+                            其他类型难产
+                            {policyData?.dystociaPolicy && (
+                              <span className="text-blue-600 ml-2">
+                                {policyData.dystociaPolicy.standardLeaveDays}天
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                      {policyDetails?.dystociaLeave && (
+                        <div className="mt-2 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                          {policyDetails.dystociaLeave}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* 多胞胎选项 */}
-                <div className="space-y-2 p-4 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="multipleBirth"
-                      checked={state.isMultipleBirth || false}
-                      onChange={(e) => updateState({ isMultipleBirth: e.target.checked })}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="multipleBirth" className="ml-2 block text-sm font-medium text-gray-700">
-                      多胞胎（双胞胎、三胞胎等）
-                    </label>
-                  </div>
-                  {state.isMultipleBirth && policyDetails?.multipleBirthLeave && (
-                    <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                      {policyDetails.multipleBirthLeave}
+                  {/* 多胞胎选项 */}
+                  <div className="space-y-2 p-4 bg-gray-50 rounded-md">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="multipleBirth"
+                        name="productionSituation"
+                        checked={state.isMultipleBirth}
+                        onChange={(e) => updateState({ 
+                          isMultipleBirth: e.target.checked,
+                          abortion: false,
+                          isDifficultBirth: false,
+                          abortionType: null,
+                          dystociaType: null
+                        })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <label htmlFor="multipleBirth" className="ml-2 block text-sm font-medium text-gray-700">
+                        多胞胎
+                      </label>
                     </div>
-                  )}
+                    {state.isMultipleBirth && policyDetails?.multipleBirthLeave && (
+                      <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                        {policyDetails.multipleBirthLeave}
+                      </div>
+                    )}
+                    {state.isMultipleBirth && policyDetails?.multipleBirthLeave && (
+                      <div className="mt-2 pl-6 text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                        {policyDetails.multipleBirthLeave}
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                {/* 平均薪资 */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    过去12个月平均薪资（元/月）
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">¥</span>
-                    </div>
-                    <input
-                      type="number"
-                      value={state.averageSalary || ''}
-                      onChange={(e) => updateState({
-                        averageSalary: e.target.value ? parseFloat(e.target.value) : undefined
-                      })}
-                      min="0"
-                      step="0.01"
-                      className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      placeholder="例如：10000.00"
-                    />
+            {/* 薪资信息 */}
+            <div className="bg-white rounded-lg shadow p-6 space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">薪资信息</h2>
+              
+              {/* 平均薪资 */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  过去12个月平均薪资（元/月）
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">¥</span>
                   </div>
+                  <input
+                    type="number"
+                    value={state.averageSalary || ''}
+                    onChange={(e) => updateState({
+                      averageSalary: e.target.value ? parseFloat(e.target.value) : undefined
+                    })}
+                    min="0"
+                    step="0.01"
+                    className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
                 </div>
-                {/* 现薪资 */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    当前薪资（元/月）
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">¥</span>
-                    </div>
-                    <input
-                      type="number"
-                      value={state.averageSalary || ''}
-                      onChange={(e) => updateState({
-                        averageSalary: e.target.value ? parseFloat(e.target.value) : undefined
-                      })}
-                      min="0"
-                      step="0.01"
-                      className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      placeholder="例如：10000.00"
-                    />
+              </div>
+
+              {/* 当前薪资 */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  当前薪资（元/月）
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">¥</span>
                   </div>
-                  {/* <p className="text-sm text-gray-500">
-                      输入平均月薪可计算生育津贴（按日计算）
-                    </p> */}
+                  <input
+                    type="number"
+                    value={state.currentSalary || ''}
+                    onChange={(e) => updateState({
+                      currentSalary: e.target.value ? parseFloat(e.target.value) : undefined
+                    })}
+                    min="0"
+                    step="0.01"
+                    className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
                 </div>
               </div>
             </div>
 
             {/* 操作按钮 */}
-            <div className="flex space-x-4">
-              <Button
-                onClick={handleCalculate}
-                disabled={!isValid || isCalculating}
-                isLoading={isCalculating}
-                className="flex-1 px-6 py-3 text-base"
-              >
-                {isCalculating ? '计算中...' : '计算产假'}
-              </Button>
+            <div className="bg-white rounded-lg shadow p-6 mt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  onClick={handleCalculate}
+                  disabled={!isValid || isCalculating}
+                  isLoading={isCalculating}
+                  className="flex-1 py-3 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  {isCalculating ? '计算中...' : '计算产假'}
+                </Button>
 
-              <Button
-                onClick={handleReset}
-                variant="ghost"
-                className="px-6 py-3 text-base"
-              >
-                重置
-              </Button>
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  className="py-3 px-6 text-base font-medium text-gray-700 border-gray-300 hover:bg-gray-50"
+                >
+                  重置
+                </Button>
+              </div>
             </div>
 
             {/* 错误信息 */}
@@ -459,7 +643,6 @@ export const Calculator: React.FC = () => {
                 </ul>
               </div>
             )}
-
           </div>
 
           {/* 右侧：计算结果 */}

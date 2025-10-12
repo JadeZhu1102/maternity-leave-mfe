@@ -22,8 +22,12 @@ export interface CalculatorState {
   deliverySequence: number;
   /** 是否流产 */
   abortion: boolean;
+  /** 流产类型 */
+  abortionType: 'early' | 'mid' | 'late' | null;
   /** 是否难产 */
   dystocia: boolean;
+  /** 难产类型 */
+  dystociaType: 'cesarean' | 'forceps' | 'other' | null;
   /** 城市名称 */
   cityName: string;
   /** 公司名称 */
