@@ -15,6 +15,7 @@ import {
   ChartBarIcon,
   ArrowRightIcon,
   Cog6ToothIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline';
 
 interface StatCard {
@@ -172,6 +173,15 @@ export function Dashboard() {
       icon: Cog6ToothIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
+      adminOnly: true,
+    },
+    {
+      name: '日历设置',
+      description: '管理工作日历和假期',
+      href: '/admin/calendar',
+      icon: CalendarIcon,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
       adminOnly: true,
     }
   ];

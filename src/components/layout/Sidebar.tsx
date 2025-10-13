@@ -13,6 +13,7 @@ import {
   UsersIcon,
   DocumentTextIcon,
   BuildingOfficeIcon,
+  CalendarIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
@@ -68,6 +69,13 @@ const navigation: NavigationItem[] = [
     icon: UsersIcon, 
     adminOnly: true,
     description: '管理系统用户权限'
+  },
+  { 
+    name: '日历设置', 
+    href: '/admin/calendar', 
+    icon: CalendarIcon, 
+    adminOnly: true,
+    description: '管理工作日历和假期设置'
   },
 ];
 

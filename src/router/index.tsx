@@ -11,6 +11,7 @@ import { Dashboard } from '../pages/Dashboard';
 import { PolicyManagement } from '../pages/admin/PolicyManagement';
 import { CompanySettings } from '../pages/admin/CompanySettings';
 import { UserManagement } from '../pages/admin/UserManagement';
+import CalendarManagement from '../pages/admin/CalendarManagement';
 import { CalculationHistory } from '../pages/CalculationHistory';
 import { Profile } from '../pages/Profile';
 import SystemSettings from '../pages/settings';
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
           {
             path: 'users',
             element: <UserManagement />,
+          },
+          {
+            path: 'calendar',
+            element: <CalendarManagement />,
           },
         ],
       },

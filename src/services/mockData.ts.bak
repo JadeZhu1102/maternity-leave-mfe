@@ -1,0 +1,696 @@
+/**
+ * 模拟数据服务
+ * Mock Data Service
+ */
+
+import { User, AuthResponse, LoginCredentials } from '../types/auth';
+import { Calendar, CalendarDay, GenerateDefaultCalendarPayload, UpdateCalendarDayPayload } from '../types/calendar';
+import { mockCalendars } from './__mocks__/calendarMockData';
+
+// 模拟用户数据
+const mockUsers: User[] = [
+  {
+    id: '1',
+    username: 'admin',
+    email: 'admin@company.com',
+    name: '系统管理员',
+    avatar: 'https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff',
+    roles: ['SUPER_ADMIN'],
+    permissions: [
+      'calculator:use',
+      'calculator:history:view',
+      'policy:view',
+      'policy:create',
+      'policy:update',
+      'policy:delete',
+      'company:view',
+      'company:update',
+      'user:view',
+      'user:create',
+      'user:update',
+      'user:delete',
+      'system:config',
+      'system:logs',
+      'analytics:view',
+      'analytics:export'
+    ],
+    department: 'IT部门',
+    employeeId: 'EMP001',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    lastLoginAt: '2024-01-15T08:30:00Z'
+  },
+  {
+    id: '2',
+    username: 'hr_manager',
+    email: 'hr@company.com',
+    name: '人事经理',
+    avatar: 'https://ui-avatars.com/api/?name=HR&background=ec4899&color=fff',
+    roles: ['ADMIN'],
+    permissions: [
+      'calculator:use',
+      'calculator:history:view',
+      'policy:view',
+      'policy:update',
+      'company:view',
+      'company:update',
+      'user:view',
+      'user:create',
+      'user:update',
+      'analytics:view'
+    ],
+    department: '人事部门',
+    employeeId: 'EMP002',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    lastLoginAt: '2024-01-14T09:15:00Z'
+  },
+  {
+    id: '3',
+    username: 'employee',
+    email: 'employee@company.com',
+    name: '普通员工',
+    avatar: 'https://ui-avatars.com/api/?name=User&background=10b981&color=fff',
+    roles: ['USER'],
+    permissions: [
+      'calculator:use',
+      'calculator:history:view'
+    ],
+    department: '业务部门',
+    employeeId: 'EMP003',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    lastLoginAt: '2024-01-13T10:00:00Z'
+  }
+];
+
+// 模拟城市政策数据
+export interface CityPolicy {
+  id: string;
+  cityName: string;
+  cityCode: string;
+  basicMaternityLeave: number; // 基础产假天数
+  difficultBirthExtension: number; // 难产延长天数
+  multipleChildrenExtension: number; // 多胎延长天数
+  lateMarriageExtension: number; // 晚婚延长天数
+  paternalLeave: number; // 陪产假天数
+  miscarriageLeave: number; // 流产假天数
+  breastfeedingLeave: number; // 哺乳假天数
+  effectiveDate: string;
+  isActive: boolean;
+  description?: string;
+}
+
+const mockCityPolicies: CityPolicy[] = [
+  {
+    id: '1',
+    cityName: '北京市',
+    cityCode: 'BJ',
+    basicMaternityLeave: 128,
+    difficultBirthExtension: 15,
+    multipleChildrenExtension: 15,
+    lateMarriageExtension: 30,
+    paternalLeave: 15,
+    miscarriageLeave: 42,
+    breastfeedingLeave: 60,
+    effectiveDate: '2021-11-26',
+    isActive: true,
+    description: '北京市人口与计划生育条例'
+  },
+  {
+    id: '2',
+    cityName: '上海市',
+    cityCode: 'SH',
+    basicMaternityLeave: 128,
+    difficultBirthExtension: 30,
+    multipleChildrenExtension: 15,
+    lateMarriageExtension: 10,
+    paternalLeave: 10,
+    miscarriageLeave: 30,
+    breastfeedingLeave: 60,
+    effectiveDate: '2021-11-25',
+    isActive: true,
+    description: '上海市人口与计划生育条例'
+  },
+  {
+    id: '3',
+    cityName: '广州市',
+    cityCode: 'GZ',
+    basicMaternityLeave: 128,
+    difficultBirthExtension: 30,
+    multipleChildrenExtension: 15,
+    lateMarriageExtension: 10,
+    paternalLeave: 15,
+    miscarriageLeave: 30,
+    breastfeedingLeave: 60,
+    effectiveDate: '2021-12-01',
+    isActive: true,
+    description: '广东省人口与计划生育条例'
+  },
+  {
+    id: '4',
+    cityName: '深圳市',
+    cityCode: 'SZ',
+    basicMaternityLeave: 128,
+    difficultBirthExtension: 30,
+    multipleChildrenExtension: 15,
+    lateMarriageExtension: 10,
+    paternalLeave: 15,
+    miscarriageLeave: 30,
+    breastfeedingLeave: 60,
+    effectiveDate: '2021-12-01',
+    isActive: true,
+    description: '广东省人口与计划生育条例'
+  }
+];
+
+// 模拟计算历史数据
+export interface CalculationRecord {
+  id: string;
+  userId: string;
+  userName: string;
+  cityName: string;
+  birthDate: string;
+  isFirstChild: boolean;
+  isDifficultBirth: boolean;
+  isMultipleChildren: boolean;
+  isLateMarriage: boolean;
+  totalDays: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  status: 'draft' | 'confirmed' | 'approved';
+}
+
+const mockCalculationRecords: CalculationRecord[] = [
+  {
+    id: '1',
+    userId: '3',
+    userName: '普通员工',
+    cityName: '北京市',
+    birthDate: '2024-01-15',
+    isFirstChild: true,
+    isDifficultBirth: false,
+    isMultipleChildren: false,
+    isLateMarriage: true,
+    totalDays: 158,
+    startDate: '2024-01-15',
+    endDate: '2024-06-21',
+    createdAt: '2024-01-10T10:30:00Z',
+    status: 'approved'
+  },
+  {
+    id: '2',
+    userId: '3',
+    userName: '普通员工',
+    cityName: '上海市',
+    birthDate: '2023-12-20',
+    isFirstChild: false,
+    isDifficultBirth: true,
+    isMultipleChildren: false,
+    isLateMarriage: false,
+    totalDays: 158,
+    startDate: '2023-12-20',
+    endDate: '2024-05-26',
+    createdAt: '2023-12-15T14:20:00Z',
+    status: 'confirmed'
+  }
+];
+
+// 模拟公司设置数据
+export interface CompanySettings {
+  id: string;
+  companyName: string;
+  companyCode: string;
+  address: string;
+  contactPhone: string;
+  contactEmail: string;
+  legalRepresentative: string;
+  businessLicense: string;
+  baseSalary: number;
+  workingHoursPerDay: number;
+  workingDaysPerWeek: number;
+  socialInsuranceBase: number;
+  housingFundBase: number;
+  maternityInsuranceRate: number;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  autoApproval: boolean;
+  approvalWorkflow: boolean;
+  updatedAt: string;
+}
+
+const mockCompanySettings: CompanySettings = {
+  id: '1',
+  companyName: '示例科技有限公司',
+  companyCode: 'DEMO001',
+  address: '北京市朝阳区示例大厦10层',
+  contactPhone: '010-12345678',
+  contactEmail: 'hr@example.com',
+  legalRepresentative: '张三',
+  businessLicense: '91110000123456789X',
+  baseSalary: 8000,
+  workingHoursPerDay: 8,
+  workingDaysPerWeek: 5,
+  socialInsuranceBase: 10000,
+  housingFundBase: 8000,
+  maternityInsuranceRate: 0.008,
+  emailNotifications: true,
+  smsNotifications: false,
+  autoApproval: false,
+  approvalWorkflow: true,
+  updatedAt: '2024-01-01T00:00:00Z'
+};
+
+// 模拟数据服务类
+export class MockDataService {
+  // 认证相关
+  static async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    await this.delay(1000); // 模拟网络延迟
+    
+    const user = mockUsers.find(u => u.username === credentials.username);
+    if (!user || credentials.password !== 'password') {
+      throw new Error('用户名或密码错误');
+    }
+
+    return {
+      user,
+      token: `mock_token_${user.id}_${Date.now()}`,
+      refreshToken: `mock_refresh_token_${user.id}_${Date.now()}`,
+      expiresIn: 3600
+    };
+  }
+
+  static async refreshToken(refreshToken: string): Promise<{ token: string }> {
+    await this.delay(500);
+    // 验证refreshToken格式（模拟验证）
+    if (!refreshToken.startsWith('mock_refresh_token_')) {
+      throw new Error('Invalid refresh token');
+    }
+    return {
+      token: `mock_token_refreshed_${Date.now()}`
+    };
+  }
+
+  static async getUserInfo(userId: string): Promise<User> {
+    await this.delay(300);
+    const user = mockUsers.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('用户不存在');
+    }
+    return user;
+  }
+
+  // 用户管理
+  static async getUsers(): Promise<User[]> {
+    await this.delay(800);
+    return [...mockUsers];
+  }
+
+  static async createUser(userData: Partial<User>): Promise<User> {
+    await this.delay(1000);
+    const newUser: User = {
+      id: String(mockUsers.length + 1),
+      username: userData.username || '',
+      email: userData.email || '',
+      name: userData.name || '',
+      avatar: userData.avatar || `https://ui-avatars.com/api/?name=${userData.name}&background=random`,
+      roles: userData.roles || ['USER'],
+      permissions: userData.permissions || ['calculator:use'],
+      department: userData.department || '',
+      employeeId: userData.employeeId || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    mockUsers.push(newUser);
+    return newUser;
+  }
+
+  static async updateUser(userId: string, userData: Partial<User>): Promise<User> {
+    await this.delay(800);
+    const userIndex = mockUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new Error('用户不存在');
+    }
+    
+    mockUsers[userIndex] = {
+      ...mockUsers[userIndex],
+      ...userData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return mockUsers[userIndex];
+  }
+
+  static async deleteUser(userId: string): Promise<void> {
+    await this.delay(500);
+    const userIndex = mockUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new Error('用户不存在');
+    }
+    mockUsers.splice(userIndex, 1);
+  }
+
+  // 政策管理
+  static async getCityPolicies(): Promise<CityPolicy[]> {
+    await this.delay(600);
+    return [...mockCityPolicies];
+  }
+
+  static async createCityPolicy(policyData: Omit<CityPolicy, 'id'>): Promise<CityPolicy> {
+    await this.delay(1000);
+    const newPolicy: CityPolicy = {
+      id: String(mockCityPolicies.length + 1),
+      ...policyData
+    };
+    mockCityPolicies.push(newPolicy);
+    return newPolicy;
+  }
+
+  static async updateCityPolicy(policyId: string, policyData: Partial<CityPolicy>): Promise<CityPolicy> {
+    await this.delay(800);
+    const policyIndex = mockCityPolicies.findIndex(p => p.id === policyId);
+    if (policyIndex === -1) {
+      throw new Error('政策不存在');
+    }
+    
+    mockCityPolicies[policyIndex] = {
+      ...mockCityPolicies[policyIndex],
+      ...policyData
+    };
+    
+    return mockCityPolicies[policyIndex];
+  }
+
+  static async deleteCityPolicy(policyId: string): Promise<void> {
+    await this.delay(500);
+    const policyIndex = mockCityPolicies.findIndex(p => p.id === policyId);
+    if (policyIndex === -1) {
+      throw new Error('政策不存在');
+    }
+    mockCityPolicies.splice(policyIndex, 1);
+  }
+
+  // 计算历史
+  static async getCalculationRecords(userId?: string): Promise<CalculationRecord[]> {
+    await this.delay(700);
+    if (userId) {
+      return mockCalculationRecords.filter(r => r.userId === userId);
+    }
+    return [...mockCalculationRecords];
+  }
+
+  static async createCalculationRecord(recordData: Omit<CalculationRecord, 'id' | 'createdAt'>): Promise<CalculationRecord> {
+    await this.delay(1000);
+    const newRecord: CalculationRecord = {
+      id: String(mockCalculationRecords.length + 1),
+      ...recordData,
+      createdAt: new Date().toISOString()
+    };
+    mockCalculationRecords.push(newRecord);
+    return newRecord;
+  }
+
+  // 公司设置
+  static async getCompanySettings(): Promise<CompanySettings> {
+    await this.delay(500);
+    return { ...mockCompanySettings };
+  }
+
+  static async updateCompanySettings(settingsData: Partial<CompanySettings>): Promise<CompanySettings> {
+    await this.delay(500);
+    const updatedSettings = { ...mockCompanySettings, ...settingsData, updatedAt: new Date().toISOString() };
+    Object.assign(mockCompanySettings, updatedSettings);
+    return updatedSettings;
+  }
+
+  // 日历相关方法
+  static async getCalendars(): Promise<Calendar[]> {
+    await MockDataService.delay(300);
+    return [...mockCalendars];
+  }
+
+  static async getCalendarById(id: string): Promise<Calendar> {
+    await MockDataService.delay(300);
+    const calendar = mockCalendars.find(c => c.id === id);
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+    return { ...calendar };
+  }
+
+  static async createCalendar(calendarData: Omit<Calendar, 'id' | 'createdAt' | 'updatedAt'>): Promise<Calendar> {
+    await MockDataService.delay(500);
+    const newCalendar: Calendar = {
+      ...calendarData,
+      id: `cal_${Date.now()}`,
+      months: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    mockCalendars.push(newCalendar);
+    return { ...newCalendar };
+  }
+
+  static async updateCalendar(calendarId: string, calendarData: Partial<Calendar>): Promise<Calendar> {
+    await MockDataService.delay(500);
+    const index = mockCalendars.findIndex(c => c.id === calendarId);
+    if (index === -1) {
+      throw new Error('Calendar not found');
+    }
+    
+    const updatedCalendar = {
+      ...mockCalendars[index],
+      ...calendarData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    mockCalendars[index] = updatedCalendar;
+    return { ...updatedCalendar };
+  }
+
+  static async deleteCalendar(calendarId: string): Promise<void> {
+    await MockDataService.delay(300);
+    const index = mockCalendars.findIndex(c => c.id === calendarId);
+    if (index === -1) {
+      throw new Error('Calendar not found');
+    }
+    mockCalendars.splice(index, 1);
+  }
+
+  static async getCalendarDays(calendarId: string, year: number, month: number): Promise<CalendarDay[]> {
+    await MockDataService.delay(300);
+    const calendar = mockCalendars.find(c => c.id === calendarId);
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+    
+    const monthData = calendar.months.find(m => m.year === year && m.month === month);
+    return monthData ? [...monthData.days] : [];
+  }
+
+  static async updateCalendarDay(updateData: UpdateCalendarDayPayload): Promise<Calendar> {
+    await MockDataService.delay(500);
+    const { calendarId, date, ...updates } = updateData;
+    const calendar = mockCalendars.find(c => c.id === calendarId);
+    
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+    
+    const dateObj = new Date(date);
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1;
+    
+    let monthData = calendar.months.find(m => m.year === year && m.month === month);
+    
+    if (!monthData) {
+      monthData = {
+        year,
+        month,
+        days: []
+      };
+      calendar.months.push(monthData);
+    }
+    
+    const dayIndex = monthData.days.findIndex(d => d.date === date);
+    if (dayIndex !== -1) {
+      monthData.days[dayIndex] = {
+        ...monthData.days[dayIndex],
+        ...updates
+      };
+    } else {
+      monthData.days.push({
+        date,
+        isWorkingDay: true,
+        isHoliday: false,
+        ...updates
+      });
+      
+      monthData.days.sort((a, b) => a.date.localeCompare(b.date));
+    }
+    
+    calendar.updatedAt = new Date().toISOString();
+    return { ...calendar };
+  }
+
+  static async generateDefaultCalendar(payload: GenerateDefaultCalendarPayload): Promise<Calendar> {
+    await MockDataService.delay(1000);
+    
+    const newCalendar: Calendar = {
+      id: `cal_${Date.now()}`,
+      name: `${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      year: payload.year,
+      description: `自动生成的${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      isDefault: false,
+      months: Array.from({ length: 12 }, (_, i) => ({
+        year: payload.year,
+        month: i + 1,
+        days: []
+      })),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    mockCalendars.push(newCalendar);
+    return { ...newCalendar };
+  }
+
+  // 仪表盘统计数据
+    mockCalendars.splice(index, 1);
+  }
+
+  async getCalendarDays(calendarId: string, year: number, month: number): Promise<CalendarDay[]> {
+    await this.delay(300);
+    const calendar = mockCalendars.find(c => c.id === calendarId);
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+    
+    const monthData = calendar.months.find(m => m.year === year && m.month === month);
+    if (!monthData) {
+      return [];
+    }
+    
+    return monthData.days;
+  }
+
+  async updateCalendarDay(updateData: UpdateCalendarDayPayload): Promise<Calendar> {
+    await this.delay(500);
+    const { calendarId, date, ...updates } = updateData;
+    const calendar = mockCalendars.find(c => c.id === calendarId);
+    
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+    
+    // 更新对应日期的数据
+    const dateObj = new Date(date);
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1;
+    const day = dateObj.getDate();
+    
+    const monthIndex = calendar.months.findIndex(m => m.year === year && m.month === month);
+    if (monthIndex === -1) {
+      // 如果该月份不存在，创建一个新的月份数据
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const days: CalendarDay[] = [];
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        days.push({
+          date: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+          isWorkingDay: true,
+          isHoliday: false,
+          description: ''
+        });
+      }
+      
+      calendar.months.push({
+        year,
+        month,
+        days
+      });
+    }
+    
+    // 更新具体某一天的数据
+    const monthData = calendar.months.find(m => m.year === year && m.month === month);
+    if (monthData) {
+      const dayIndex = monthData.days.findIndex(d => d.date === date);
+      if (dayIndex !== -1) {
+        monthData.days[dayIndex] = {
+          ...monthData.days[dayIndex],
+          ...updates
+        };
+      }
+    }
+    
+    calendar.updatedAt = new Date().toISOString();
+    return calendar;
+  }
+
+  async generateDefaultCalendar(payload: GenerateDefaultCalendarPayload): Promise<Calendar> {
+    await this.delay(1000);
+    
+    const newCalendar: Calendar = {
+      id: String(mockCalendars.length + 1),
+      name: `${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      year: payload.year,
+      description: `自动生成的${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      isDefault: false,
+      months: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // 生成12个月的日历数据
+    for (let month = 1; month <= 12; month++) {
+      const daysInMonth = new Date(payload.year, month, 0).getDate();
+      const days: CalendarDay[] = [];
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(payload.year, month - 1, day);
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        
+        days.push({
+          date: `${payload.year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+          isWorkingDay: !isWeekend, // 默认周末休息
+          isHoliday: false,
+          description: ''
+        });
+      }
+      
+      newCalendar.months.push({
+        year: payload.year,
+        month,
+        days
+      });
+    }
+    
+    mockCalendars.push(newCalendar);
+    return newCalendar;
+  }
+
+  // 仪表盘统计数据
+  static async getDashboardStats(): Promise<{
+    totalUsers: number;
+    totalCalculations: number;
+    thisMonthCalculations: number;
+    activePolicies: number;
+  }> {
+    await this.delay(600);
+    return {
+      totalUsers: mockUsers.length,
+      totalCalculations: mockCalculationRecords.length,
+      thisMonthCalculations: mockCalculationRecords.filter(r => 
+        new Date(r.createdAt).getMonth() === new Date().getMonth()
+      ).length,
+      activePolicies: mockCityPolicies.filter(p => p.isActive).length
+    };
+  }
+
+  // 工具方法：模拟网络延迟
+  private static delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
