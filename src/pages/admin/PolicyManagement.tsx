@@ -213,9 +213,9 @@ export function PolicyManagement() {
       <div className="bg-white shadow rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-            </div>
+            </div> */}
             <input
               type="text"
               className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"

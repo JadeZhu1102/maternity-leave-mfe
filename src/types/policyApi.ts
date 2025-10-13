@@ -6,37 +6,35 @@
 export interface StatutoryPolicy {
   leaveDays: number;
   calendarDay: boolean;
-  maxLeaveDays: number;
-  bonusLeaveDays: number;
+  delayForPublicHoliday: boolean;
 }
 
 export interface DystociaPolicy {
-  calendarDay: boolean;
   standardLeaveDays: number;
+  delayForPublicHoliday: boolean;
+  calendarDay: boolean;
 }
 
 export interface MoreInfantPolicy {
-  leaveDays: number;
+  extraInfantLeaveDays: number;
+  delayForPublicHoliday: boolean;
   calendarDay: boolean;
 }
 
 export interface OtherExtendedPolicy {
   leaveDays: number;
+  delayForPublicHoliday: boolean;
   calendarDay: boolean;
-  maxLeaveDays: number;
 }
 
 export interface AbortionRule {
-  name: string; // 规则名称，如"宫外孕"、"自然流产"等
-  ectopicPregnancy?: boolean; // 是否为宫外孕
-  minPregnancyDays: number; // 最小怀孕天数
-  maxPregnancyDays: number; // 最大怀孕天数
-  minLeaveDays: number; // 最小休假天数
-  maxLeaveDays: number; // 最大休假天数
-  leaveDays: number; // 默认休假天数
+  ruleCode: string;
+  description: string;
+  leaveDays: number;
 }
 
 export interface AbortionPolicy {
+  delayForPublicHoliday: boolean;
   calendarDay: boolean;
   abortionRules: AbortionRule[];
 }
@@ -56,24 +54,28 @@ export interface AllowancePolicy {
   corpSalaryDetailList: CorpSalaryDetail[];
   numerator: number;
   denominator: number;
-  allowanceDays: number;
+  allowanceDaysRule: string[];
   targetAccountType: string;
   differenceCompensationRule: DifferenceCompensationRule;
   govAllowance: number;
 }
 
-export interface BonusLeavePolicy {
-  description: string;
-  days: number;
-}
-
-export interface CreatePolicyPayload {
-  cityName: string;
+export interface UpdatePolicyPayload {
+  id: number;
+  cityCode: string;
   statutoryPolicy: StatutoryPolicy;
   dystociaPolicy: DystociaPolicy;
   moreInfantPolicy: MoreInfantPolicy;
   otherExtendedPolicy: OtherExtendedPolicy;
   abortionPolicy: AbortionPolicy;
   allowancePolicy: AllowancePolicy;
-  bonusLeavePolicies: BonusLeavePolicy[];
+}
+
+export interface CreatePolicyPayload extends Omit<UpdatePolicyPayload, 'id'> {
+  cityName: string;
+}
+
+export interface BonusLeavePolicy {
+  description: string;
+  days: number;
 }

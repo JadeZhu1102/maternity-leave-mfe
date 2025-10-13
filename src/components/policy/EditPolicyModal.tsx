@@ -76,57 +76,56 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
     }
   }, [policy]);
 
-  const handleSubmit = async (data: CreatePolicyPayload) => {
+  const handleSubmit = async (data: any) => {
     try {
       setLoading(true);
       
-      // Format the payload to match the API requirements
+      // Format the payload according to the new API requirements
       const payload = {
-        ...data,
-        id: policy.id, // Ensure we keep the same ID
-        // Ensure all number fields are properly converted
+        id: policy.id,
+        cityCode: data.cityName, // Assuming cityName maps to cityCode
         statutoryPolicy: {
-          ...data.statutoryPolicy,
-          leaveDays: Number(data.statutoryPolicy.leaveDays),
-          maxLeaveDays: Number(data.statutoryPolicy.maxLeaveDays),
+          leaveDays: Number(data.statutoryPolicy?.leaveDays) || 0,
+          delayForPublicHoliday: data.statutoryPolicy?.delayForPublicHoliday || false,
+          calendarDay: data.statutoryPolicy?.calendarDay ?? true
         },
         dystociaPolicy: {
-          ...data.dystociaPolicy,
-          standardLeaveDays: Number(data.dystociaPolicy.standardLeaveDays),
+          standardLeaveDays: Number(data.dystociaPolicy?.standardLeaveDays) || 0,
+          delayForPublicHoliday: data.dystociaPolicy?.delayForPublicHoliday || false,
+          calendarDay: data.dystociaPolicy?.calendarDay ?? true
         },
         moreInfantPolicy: {
-          ...data.moreInfantPolicy,
-          leaveDays: Number(data.moreInfantPolicy.leaveDays),
+          extraInfantLeaveDays: Number(data.moreInfantPolicy?.leaveDays) || 0,
+          delayForPublicHoliday: data.moreInfantPolicy?.delayForPublicHoliday || false,
+          calendarDay: data.moreInfantPolicy?.calendarDay ?? true
         },
         otherExtendedPolicy: {
-          ...data.otherExtendedPolicy,
-          leaveDays: Number(data.otherExtendedPolicy.leaveDays),
-          maxLeaveDays: Number(data.otherExtendedPolicy.maxLeaveDays),
+          leaveDays: Number(data.otherExtendedPolicy?.leaveDays) || 0,
+          delayForPublicHoliday: data.otherExtendedPolicy?.delayForPublicHoliday || false,
+          calendarDay: data.otherExtendedPolicy?.calendarDay ?? true
+        },
+        abortionPolicy: {
+          delayForPublicHoliday: data.abortionPolicy?.delayForPublicHoliday || false,
+          calendarDay: data.abortionPolicy?.calendarDay ?? true,
+          abortionRules: data.abortionPolicy?.abortionRules || []
         },
         allowancePolicy: {
-          ...data.allowancePolicy,
-          // Format allowance policy data
-          statutory: {
-            govAllowance: Number(data.allowancePolicy.statutory?.govAllowance) || 0,
-            allowanceDaysRule: data.allowancePolicy.statutory?.allowanceDaysRule || '',
+          corpSalaryDetailList: data.allowancePolicy?.corpSalaryDetailList || [],
+          numerator: data.allowancePolicy?.numerator || 1,
+          denominator: data.allowancePolicy?.denominator || 30,
+          allowanceDaysRule: data.allowancePolicy?.allowanceDaysRule || [],
+          targetAccountType: data.allowancePolicy?.targetAccountType || 'CORP',
+          differenceCompensationRule: {
+            ruleDescription: data.allowancePolicy?.differenceCompensationRule?.ruleDescription || '',
+            forceCompensation: data.allowancePolicy?.differenceCompensationRule?.forceCompensation || 'Only if',
+            otherCompensationRuleDesc: data.allowancePolicy?.differenceCompensationRule?.otherCompensationRuleDesc || []
           },
-          dystocia: {
-            govAllowance: Number(data.allowancePolicy.dystocia?.govAllowance) || 0,
-            allowanceDaysRule: data.allowancePolicy.dystocia?.allowanceDaysRule || '',
-          },
-          moreInfant: {
-            govAllowance: Number(data.allowancePolicy.moreInfant?.govAllowance) || 0,
-            allowanceDaysRule: data.allowancePolicy.moreInfant?.allowanceDaysRule || '',
-          },
-          bonusLeave: {
-            govAllowance: Number(data.allowancePolicy.bonusLeave?.govAllowance) || 0,
-            allowanceDaysRule: data.allowancePolicy.bonusLeave?.allowanceDaysRule || '',
-          },
-        },
+          govAllowance: Number(data.allowancePolicy?.govAllowance) || 0
+        }
       };
 
-      // Call your API to update the policy
-      await axios.put(`${API_BASE_URL}/api/policies/${policy.id}`, payload);
+      // Call the API to update the policy
+      await axios.put('http://localhost:8080/api/v1/policy/update', payload);
       
       enqueueSnackbar('政策更新成功', { variant: 'success' });
       

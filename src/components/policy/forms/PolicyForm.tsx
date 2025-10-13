@@ -565,16 +565,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
         <SectionCard elevation={0} variant="outlined">
           <SectionHeader
             title="津贴政策"
-            action={
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() => appendCorpSalary({ companyName: '', corpAverageSalary: 0 })}
-              >
-                添加公司薪资
-              </Button>
-            }
           />
           <CardContent>
             <Typography variant="subtitle2" gutterBottom>法定产假</Typography>
@@ -709,8 +699,26 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>公司薪资列表</Typography>
+            {/* <Divider sx={{ my: 2 }} /> */}
+
+          </CardContent>
+        </SectionCard>
+        <SectionCard>
+          <SectionHeader
+            title="公司薪资列表"
+            action={
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => appendCorpSalary({ companyName: '', corpAverageSalary: 0 })}
+              >
+                添加公司薪资
+              </Button>
+            }
+          />
+          {/* <Typography variant="subtitle2" gutterBottom>公司薪资列表</Typography> */}
+          <CardContent>
             {corpSalaryFields.map((field, index) => (
               <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Grid container spacing={2}>
@@ -767,7 +775,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
             ))}
           </CardContent>
         </SectionCard>
-
         {/* Allowance Details Section */}
         <SectionCard elevation={0} variant="outlined">
           <SectionHeader title="津贴计算参数" />
