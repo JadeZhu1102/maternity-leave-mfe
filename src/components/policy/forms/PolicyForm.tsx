@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { useForm, SubmitHandler, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { CreatePolicyPayload } from '../../../types/policyApi';
 import {
   TextField,
@@ -723,19 +723,28 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
               <Box key={field.id} sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={5}>
-                    <TextField
-                      label="公司名称"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`allowancePolicy.corpSalaryDetailList.${index}.companyName` as const, {
-                        required: '必填',
-                      })}
-                      error={!!errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName}
-                      helperText={errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName?.message}
-                      FormHelperTextProps={{
-                        style: { marginTop: 0, marginBottom: 0 }
-                      }}
+                    <Controller
+                      name={`allowancePolicy.corpSalaryDetailList.${index}.companyName` as const}
+                      control={control}
+                      rules={{ required: '请选择公司' }}
+                      render={({ field }) => (
+                        <FormControl size="small" variant="outlined" error={!!errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName} sx={{ minWidth: 300, width: 300 }}>
+                          <InputLabel>公司名称</InputLabel>
+                          <Select
+                            {...field}
+                            label="公司名称"
+                            fullWidth
+                          >
+                            <MenuItem value="OCBC">OCBC</MenuItem>
+                            <MenuItem value="E2P">E2P</MenuItem>
+                          </Select>
+                          {errors.allowancePolicy?.corpSalaryDetailList?.[index]?.companyName && (
+                            <FormHelperText style={{ marginTop: 0, marginBottom: 0 }}>
+                              {errors.allowancePolicy.corpSalaryDetailList[index]?.companyName?.message}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      )}
                     />
                   </Grid>
                   <Grid item xs={12} md={5}>
