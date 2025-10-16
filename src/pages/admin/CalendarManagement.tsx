@@ -142,14 +142,7 @@ const CalendarManagement: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={() => setNewCalendarDialogOpen(true)}
-            >
-              新建日历
-            </Button>
+
           </Box>
         </Box>
 

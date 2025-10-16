@@ -1,76 +1,66 @@
-import { Calendar, CalendarFilter, GenerateDefaultCalendarPayload, UpdateCalendarDayPayload } from '../types/calendar';
-import { MockDataService } from './mockData';
+import { Calendar, CalendarFilter } from '../types/calendar';
+import { generateYearMonths } from './__mocks__/calendarMockData';
 
-// 使用 MockDataService 实现所有日历相关的 API 调用
+// 生成2025年日历数据
+const generate2025Calendar = (): Calendar => {
+  return {
+    id: '2025',
+    name: '2025年中国大陆工作日历',
+    year: 2025,
+    description: '2025年中国大陆标准工作日历，包含法定节假日和调休安排',
+    isDefault: true,
+    months: generateYearMonths(2025, 'CN', 'mainland'),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+};
+
+// 2025年日历数据
+const calendar2025 = generate2025Calendar();
+
 const calendarApi = {
-  // 获取日历列表（带过滤）
+  // 获取日历列表（仅返回2025年日历）
   async getCalendars(filter?: CalendarFilter): Promise<Calendar[]> {
-    const calendars = await MockDataService.getCalendars();
-    // 应用过滤条件
-    return calendars.filter(calendar => {
-      if (filter?.year && calendar.year !== filter.year) return false;
-      if (filter?.isDefault !== undefined && calendar.isDefault !== filter.isDefault) return false;
-      return true;
-    });
+    if (filter?.year && filter.year !== 2025) {
+      return [];
+    }
+    if (filter?.isDefault !== undefined && filter.isDefault !== true) {
+      return [];
+    }
+    return [calendar2025];
   },
 
-  // 根据ID获取日历
+  // 根据ID获取日历（仅支持2025年日历）
   async getCalendarById(id: string): Promise<Calendar> {
-    return MockDataService.getCalendarById(id);
+    if (id === '2025') {
+      return calendar2025;
+    }
+    throw new Error('Calendar not found');
   },
 
-  // 获取指定年份的默认日历
+  // 获取指定年份的默认日历（仅支持2025年）
   async getDefaultCalendar(year: number): Promise<Calendar> {
-    const calendars = await this.getCalendars({ year, isDefault: true });
-    if (calendars.length > 0) {
-      return calendars[0];
+    if (year === 2025) {
+      return calendar2025;
     }
-    // 如果没有找到默认日历，返回第一个匹配年份的日历
-    const yearCalendars = await this.getCalendars({ year });
-    if (yearCalendars.length > 0) {
-      return yearCalendars[0];
-    }
-    // 如果还没有，生成一个默认日历
-    return this.generateDefaultCalendar({ year });
+    throw new Error(`Only year 2025 is supported`);
   },
 
-  // 为指定年份生成默认日历
-  async generateDefaultCalendar(payload: GenerateDefaultCalendarPayload): Promise<Calendar> {
-    const { year, countryCode = 'CN', region } = payload;
-    const calendarName = region 
-      ? `${year}年${region}工作日历`
-      : `${year}年中国大陆工作日历`;
-      
-    return MockDataService.createCalendar({
-      name: calendarName,
-      year,
-      description: `自动生成的${year}年${region ? region + ' ' : ''}工作日历`,
-      isDefault: true,
-      months: []
-    });
+  // 以下方法不再支持，保留接口兼容性
+  async generateDefaultCalendar(): Promise<Calendar> {
+    return calendar2025;
   },
 
-  // 更新日历中的某一天
-  async updateCalendarDay(payload: UpdateCalendarDayPayload): Promise<Calendar> {
-    return MockDataService.updateCalendarDay(payload);
+  async updateCalendarDay(): Promise<Calendar> {
+    throw new Error('Calendar updates are not supported');
   },
 
-  // 保存日历（创建或更新）
-  async saveCalendar(calendar: Partial<Calendar>): Promise<Calendar> {
-    if (calendar.id) {
-      return MockDataService.updateCalendar(calendar.id, calendar);
-    } else {
-      return MockDataService.createCalendar({
-        ...calendar,
-        isDefault: calendar.isDefault || false,
-        months: calendar.months || []
-      });
-    }
+  async saveCalendar(): Promise<Calendar> {
+    throw new Error('Calendar creation/updates are not supported');
   },
 
-  // 删除日历
-  async deleteCalendar(id: string): Promise<void> {
-    await MockDataService.deleteCalendar(id);
+  async deleteCalendar(): Promise<void> {
+    throw new Error('Calendar deletion is not supported');
   }
 };
 

@@ -129,4 +129,4 @@ function getHolidayName(year: number, month: number, day: number, countryCode: s
   return holidays[dateStr] || '';
 }
 
-export { mockCalendars };
+export { mockCalendars, generateYearMonths };
