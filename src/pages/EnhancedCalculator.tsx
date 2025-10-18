@@ -32,6 +32,8 @@ import {
   Tooltip,
   CircularProgress,
   Snackbar,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   CalendarMonth as CalendarIcon,
@@ -113,7 +115,9 @@ const EnhancedCalculator: React.FC = () => {
   // 获取选中城市的政策
   useEffect(() => {
     if (state.cityCode) {
-      fetchPolicyByCity(state.cityCode)
+      // 将城市代码的首字母转为大写，其他保持原样
+      const formattedCityCode = state.cityCode.charAt(0).toUpperCase() + state.cityCode.slice(1);
+      fetchPolicyByCity(formattedCityCode)
         .then(data => setPolicyData(data))
         .catch(err => console.error('Failed to fetch policy:', err));
     }
@@ -419,7 +423,6 @@ const EnhancedCalculator: React.FC = () => {
                             ...state,
                             birthType: value,
                             isDifficultBirth: value === 'difficult',
-                            isMultipleBirth: value === 'multiple',
                             isAbortion: value === 'abortion',
                           });
                         }
@@ -439,14 +442,6 @@ const EnhancedCalculator: React.FC = () => {
                           <Typography variant="body2">难产</Typography>
                           <Typography variant="caption" color="text.secondary">
                             +{policyData?.dystociaPolicy?.standardLeaveDays || 15}天
-                          </Typography>
-                        </Box>
-                      </ToggleButton>
-                      <ToggleButton value="multiple">
-                        <Box textAlign="center">
-                          <Typography variant="body2">多胎</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            +{policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天/胎
                           </Typography>
                         </Box>
                       </ToggleButton>
@@ -473,21 +468,6 @@ const EnhancedCalculator: React.FC = () => {
                     </Alert>
                   )}
 
-                  {/* 多胎详情 */}
-                  {state.isMultipleBirth && (
-                    <Box>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="婴儿数量"
-                        value={state.infantNumber}
-                        onChange={(e) => setState({ ...state, infantNumber: parseInt(e.target.value) || 1 })}
-                        inputProps={{ min: 2, max: 5 }}
-                        helperText={`每多一个婴儿增加${policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天，共增加${(state.infantNumber - 1) * (policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15)}天`}
-                      />
-                    </Box>
-                  )}
-
                   {/* 流产详情 */}
                   {state.isAbortion && (
                     <Box>
@@ -512,6 +492,50 @@ const EnhancedCalculator: React.FC = () => {
                       </Alert>
                     </Box>
                   )}
+
+                  {/* 多胎选择 */}
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={state.isMultipleBirth}
+                          onChange={(e) => setState({ ...state, isMultipleBirth: e.target.checked })}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2">是否多胎</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            每多一个婴儿增加{policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    {state.isMultipleBirth && (
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="婴儿数量"
+                        value={state.infantNumber}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value) && value >= 2) {
+                            setState({ ...state, infantNumber: value });
+                          } else if (e.target.value === '') {
+                            setState({ ...state, infantNumber: 2 });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setState({ ...state, infantNumber: 2 });
+                          }
+                        }}
+                        inputProps={{ min: 2, max: 5, step: 1 }}
+                        sx={{ mt: 1 }}
+                        helperText={`共增加${(state.infantNumber - 1) * (policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15)}天`}
+                      />
+                    )}
+                  </Box>
 
                   {/* 分娩顺序 */}
                   <TextField
