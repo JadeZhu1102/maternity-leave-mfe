@@ -49,7 +49,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { SUPPORTED_CITIES } from '../constants/supportedCities';
-import { getCityPolicy } from '../constants/policies';
+import { fetchPolicyByCity, type PolicyData } from '../services/policyService';
+import { calculateLeaveDates, calculateAllowance, type CalculateResponse } from '../services/maternityLeaveService';
 
 dayjs.locale('zh-cn');
 
@@ -95,15 +96,21 @@ const EnhancedCalculator: React.FC = () => {
     companyBase: 0,
   });
 
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CalculateResponse | null>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [policyData, setPolicyData] = useState<PolicyData | null>(null);
 
   const steps = ['基本信息', '生育情况', '社保信息', '计算结果'];
 
   // 获取选中城市的政策
-  const cityPolicy = useMemo(() => {
-    if (!state.cityCode) return null;
-    return getCityPolicy(state.cityCode);
+  useEffect(() => {
+    if (state.cityCode) {
+      fetchPolicyByCity(state.cityCode)
+        .then(data => setPolicyData(data))
+        .catch(err => console.error('Failed to fetch policy:', err));
+    }
   }, [state.cityCode]);
 
   // 计算完成度
@@ -134,49 +141,65 @@ const EnhancedCalculator: React.FC = () => {
   };
 
   // 计算产假
-  const handleCalculate = () => {
-    if (!cityPolicy || !state.expectedDate || !state.leaveStartDate) return;
+  const handleCalculate = async () => {
+    if (!state.expectedDate || !state.leaveStartDate || !state.cityCode) return;
 
-    let totalDays = cityPolicy.basicMaternityLeave + cityPolicy.extendedMaternityLeave;
-    
-    // 难产额外假期
-    if (state.isDifficultBirth) {
-      totalDays += cityPolicy.difficultBirthExtraLeave;
-    }
-    
-    // 多胎额外假期
-    if (state.isMultipleBirth && state.infantNumber > 1) {
-      totalDays += (state.infantNumber - 1) * cityPolicy.multipleBirthExtraLeave;
-    }
-    
-    // 计算结束日期
-    const endDate = state.leaveStartDate.add(totalDays, 'day');
-    
-    // 计算生育津贴（如果填写了社保基数）
-    let allowance = 0;
-    let companySubsidy = 0;
-    if (state.socialSecurityBase > 0) {
-      allowance = (state.socialSecurityBase / 30) * totalDays;
-      if (state.companyBase > state.socialSecurityBase) {
-        companySubsidy = ((state.companyBase - state.socialSecurityBase) / 30) * totalDays;
-      }
-    }
+    setLoading(true);
+    setError(null);
 
-    setResult({
-      totalDays,
-      startDate: state.leaveStartDate.format('YYYY-MM-DD'),
-      endDate: endDate.format('YYYY-MM-DD'),
-      allowance,
-      companySubsidy,
-      breakdown: {
-        basic: cityPolicy.basicMaternityLeave,
-        extended: cityPolicy.extendedMaternityLeave,
-        difficult: state.isDifficultBirth ? cityPolicy.difficultBirthExtraLeave : 0,
-        multiple: state.isMultipleBirth ? (state.infantNumber - 1) * cityPolicy.multipleBirthExtraLeave : 0,
+    try {
+      // 第一步：计算产假日期
+      const dateResponse = await calculateLeaveDates({
+        staffName: state.staffName || '员工',
+        childBirthdate: state.expectedDate.format('YYYYMMDD'),
+        infantNumber: state.infantNumber,
+        deliverySequence: state.deliverySequence,
+        abortion: state.isAbortion,
+        dystocia: state.isDifficultBirth,
+        cityName: state.cityCode,
+        companyName: '公司',
+        leaveStartDate: state.leaveStartDate.format('YYYY-MM-DD'),
+        calendarCode: 'CN',
+        regnancyDays: 0,
+        ectopicPregnancy: false,
+        recommendAbortionLeaveDays: 0,
+        dystociaCodeList: state.isDifficultBirth ? ['standard'] : [],
+      });
+
+      // 第二步：如果填写了社保信息，计算生育津贴
+      if (state.socialSecurityBase > 0 || state.companyBase > 0) {
+        const allowanceResponse = await calculateAllowance({
+          staffName: state.staffName || '员工',
+          childBirthdate: state.expectedDate.format('YYYYMMDD'),
+          infantNumber: state.infantNumber,
+          deliverySequence: state.deliverySequence,
+          abortion: state.isAbortion,
+          dystocia: state.isDifficultBirth,
+          cityName: state.cityCode,
+          companyName: '公司',
+          leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
+          leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
+          calendarCode: 'CN',
+          regnancyDays: 0,
+          ectopicPregnancy: false,
+          recommendAbortionLeaveDays: 0,
+          dystociaCodeList: state.isDifficultBirth ? ['standard'] : [],
+          averageSalary: state.socialSecurityBase || 0,
+          currentSalary: state.companyBase || 0,
+          hitForceCompensationRule: true,
+        });
+        setResult(allowanceResponse);
+      } else {
+        setResult(dateResponse);
       }
-    });
-    
-    setActiveStep(3);
+
+      setActiveStep(3);
+    } catch (err: any) {
+      setError(err.message || '计算失败，请检查输入信息');
+      console.error('Calculate error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -270,7 +293,7 @@ const EnhancedCalculator: React.FC = () => {
                     value={state.cityCode}
                     onChange={(e) => setState({ ...state, cityCode: e.target.value })}
                     required
-                    helperText={cityPolicy ? `标准产假：${cityPolicy.basicMaternityLeave + cityPolicy.extendedMaternityLeave}天` : '请选择城市查看政策'}
+                    helperText={policyData ? `标准产假：${policyData.statutoryPolicy.leaveDays + (policyData.statutoryPolicy.maxLeaveDays - policyData.statutoryPolicy.leaveDays)}天` : '请选择城市查看政策'}
                   >
                     {SUPPORTED_CITIES.map((city) => (
                       <MenuItem key={city.code} value={city.code}>
@@ -358,7 +381,7 @@ const EnhancedCalculator: React.FC = () => {
                         <Box textAlign="center">
                           <Typography variant="body2">难产</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            +{cityPolicy?.difficultBirthExtraLeave || 0}天
+                            +{policyData?.dystociaPolicy?.standardLeaveDays || 15}天
                           </Typography>
                         </Box>
                       </ToggleButton>
@@ -366,7 +389,7 @@ const EnhancedCalculator: React.FC = () => {
                         <Box textAlign="center">
                           <Typography variant="body2">多胎</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            +{cityPolicy?.multipleBirthExtraLeave || 0}天/胎
+                            +{policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天/胎
                           </Typography>
                         </Box>
                       </ToggleButton>
@@ -385,7 +408,7 @@ const EnhancedCalculator: React.FC = () => {
                   {state.isDifficultBirth && (
                     <Alert severity="info" icon={<HospitalIcon />}>
                       <Typography variant="body2" gutterBottom>
-                        <strong>难产额外假期：{cityPolicy?.difficultBirthExtraLeave}天</strong>
+                        <strong>难产额外假期：{policyData?.dystociaPolicy?.standardLeaveDays || 15}天</strong>
                       </Typography>
                       <Typography variant="caption">
                         包括：剖宫产、产钳助产、胎头吸引、臀位助产等情况
@@ -403,7 +426,7 @@ const EnhancedCalculator: React.FC = () => {
                         value={state.infantNumber}
                         onChange={(e) => setState({ ...state, infantNumber: parseInt(e.target.value) || 1 })}
                         inputProps={{ min: 2, max: 5 }}
-                        helperText={`每多一个婴儿增加${cityPolicy?.multipleBirthExtraLeave}天，共增加${(state.infantNumber - 1) * (cityPolicy?.multipleBirthExtraLeave || 0)}天`}
+                        helperText={`每多一个婴儿增加${policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天，共增加${(state.infantNumber - 1) * (policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15)}天`}
                       />
                     </Box>
                   )}
@@ -527,7 +550,7 @@ const EnhancedCalculator: React.FC = () => {
           {/* 右侧：政策说明和结果 */}
           <Grid item xs={12} md={5}>
             {/* 政策说明 */}
-            {cityPolicy && (
+            {policyData && (
               <Card sx={{ mb: 3, position: 'sticky', top: 16 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom fontWeight={600}>
@@ -541,7 +564,7 @@ const EnhancedCalculator: React.FC = () => {
                         基础产假
                       </Typography>
                       <Typography variant="body2">
-                        {cityPolicy.basicMaternityLeave}天（国家规定）
+                        {policyData.statutoryPolicy.leaveDays}天（国家规定）
                       </Typography>
                     </Box>
 
@@ -550,7 +573,7 @@ const EnhancedCalculator: React.FC = () => {
                         延长产假
                       </Typography>
                       <Typography variant="body2">
-                        {cityPolicy.extendedMaternityLeave}天（地方规定）
+                        {policyData.statutoryPolicy.maxLeaveDays - policyData.statutoryPolicy.leaveDays}天（地方规定）
                       </Typography>
                     </Box>
 
@@ -559,7 +582,7 @@ const EnhancedCalculator: React.FC = () => {
                         总产假天数
                       </Typography>
                       <Typography variant="h5" color="success.main" fontWeight={600}>
-                        {cityPolicy.basicMaternityLeave + cityPolicy.extendedMaternityLeave}天
+                        {policyData.statutoryPolicy.maxLeaveDays}天
                       </Typography>
                     </Box>
 
@@ -570,13 +593,13 @@ const EnhancedCalculator: React.FC = () => {
                         额外假期
                       </Typography>
                       <Typography variant="body2">
-                        • 难产：+{cityPolicy.difficultBirthExtraLeave}天
+                        • 难产：+{policyData.dystociaPolicy.standardLeaveDays}天
                       </Typography>
                       <Typography variant="body2">
-                        • 多胎：+{cityPolicy.multipleBirthExtraLeave}天/胎
+                        • 多胎：+{policyData.moreInfantPolicy.extraInfantLeaveDays}天/胎
                       </Typography>
                       <Typography variant="body2">
-                        • 陪产假：{cityPolicy.paternityLeave}天
+                        • 陪产假：{policyData.paternityLeavePolicy?.leaveDays || 0}天
                       </Typography>
                     </Box>
                   </Stack>
@@ -599,30 +622,8 @@ const EnhancedCalculator: React.FC = () => {
                         总产假天数
                       </Typography>
                       <Typography variant="h3" color="success.dark" fontWeight={700}>
-                        {result.totalDays}天
+                        {result.leaveDetail.currentLeaveDays}天
                       </Typography>
-                    </Box>
-
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        假期明细
-                      </Typography>
-                      <Typography variant="body2">
-                        基础产假：{result.breakdown.basic}天
-                      </Typography>
-                      <Typography variant="body2">
-                        延长产假：{result.breakdown.extended}天
-                      </Typography>
-                      {result.breakdown.difficult > 0 && (
-                        <Typography variant="body2">
-                          难产假：+{result.breakdown.difficult}天
-                        </Typography>
-                      )}
-                      {result.breakdown.multiple > 0 && (
-                        <Typography variant="body2">
-                          多胎假：+{result.breakdown.multiple}天
-                        </Typography>
-                      )}
                     </Box>
 
                     <Divider />
@@ -632,14 +633,14 @@ const EnhancedCalculator: React.FC = () => {
                         休假时间
                       </Typography>
                       <Typography variant="body2">
-                        开始：{result.startDate}
+                        开始：{result.leaveDetail.leaveStartDate}
                       </Typography>
                       <Typography variant="body2">
-                        结束：{result.endDate}
+                        结束：{result.leaveDetail.leaveEndDate}
                       </Typography>
                     </Box>
 
-                    {result.allowance > 0 && (
+                    {result.allowanceDetail && result.allowanceDetail.allowance !== null && result.allowanceDetail.allowance > 0 && (
                       <>
                         <Divider />
                         <Box>
@@ -647,13 +648,34 @@ const EnhancedCalculator: React.FC = () => {
                             生育津贴
                           </Typography>
                           <Typography variant="h5" color="success.dark" fontWeight={600}>
-                            ¥{result.allowance.toFixed(2)}
+                            ¥{result.allowanceDetail.allowance.toLocaleString()}
                           </Typography>
-                          {result.companySubsidy > 0 && (
+                          {result.allowanceDetail.compensation !== null && result.allowanceDetail.compensation > 0 && (
                             <Typography variant="body2" sx={{ mt: 1 }}>
-                              公司补差：¥{result.companySubsidy.toFixed(2)}
+                              公司补差：¥{result.allowanceDetail.compensation.toLocaleString()}
                             </Typography>
                           )}
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            总工资：¥{result.allowanceDetail.totalSalary?.toLocaleString()}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+
+                    {result.calculateComments && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            计算说明
+                          </Typography>
+                          <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
+                            {result.calculateComments.descriptionList.map((desc, index) => (
+                              <Typography key={index} variant="caption" display="block" sx={{ py: 0.5 }}>
+                                {desc}
+                              </Typography>
+                            ))}
+                          </Box>
                         </Box>
                       </>
                     )}
