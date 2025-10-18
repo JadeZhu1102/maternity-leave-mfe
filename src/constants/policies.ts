@@ -325,3 +325,158 @@ export const EMPLOYMENT_TYPE_OPTIONS = [
   { label: '合同工', value: 'contract' },
   { label: '自由职业', value: 'freelance' }
 ];
+
+/**
+ * 简化的城市政策接口（用于增强版计算器）
+ */
+export interface SimpleCityPolicy {
+  cityCode: string;
+  cityName: string;
+  basicMaternityLeave: number;
+  extendedMaternityLeave: number;
+  difficultBirthExtraLeave: number;
+  multipleBirthExtraLeave: number;
+  paternityLeave: number;
+  lateMarriageLeave?: number;
+}
+
+/**
+ * 简化的城市政策数据（13个支持的城市）
+ */
+export const CITY_POLICIES: Record<string, SimpleCityPolicy> = {
+  beijing: {
+    cityCode: 'beijing',
+    cityName: '北京',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+    lateMarriageLeave: 30,
+  },
+  shanghai: {
+    cityCode: 'shanghai',
+    cityName: '上海',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 10,
+  },
+  guangzhou: {
+    cityCode: 'guangzhou',
+    cityName: '广州',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 80,
+    difficultBirthExtraLeave: 30,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  shenzhen: {
+    cityCode: 'shenzhen',
+    cityName: '深圳',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 80,
+    difficultBirthExtraLeave: 30,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  tianjin: {
+    cityCode: 'tianjin',
+    cityName: '天津',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  nanjing: {
+    cityCode: 'nanjing',
+    cityName: '南京',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 30,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  hangzhou: {
+    cityCode: 'hangzhou',
+    cityName: '杭州',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 30,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  jinan: {
+    cityCode: 'jinan',
+    cityName: '济南',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  qingdao: {
+    cityCode: 'qingdao',
+    cityName: '青岛',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  wuhan: {
+    cityCode: 'wuhan',
+    cityName: '武汉',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  changsha: {
+    cityCode: 'changsha',
+    cityName: '长沙',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  chongqing: {
+    cityCode: 'chongqing',
+    cityName: '重庆',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 30,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  },
+  chengdu: {
+    cityCode: 'chengdu',
+    cityName: '成都',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 60,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 20,
+  },
+};
+
+/**
+ * 根据城市代码获取政策
+ * @param cityCode 城市代码
+ * @returns 城市政策或默认政策
+ */
+export const getCityPolicy = (cityCode: string): SimpleCityPolicy => {
+  return CITY_POLICIES[cityCode] || {
+    cityCode: 'default',
+    cityName: '默认',
+    basicMaternityLeave: 98,
+    extendedMaternityLeave: 30,
+    difficultBirthExtraLeave: 15,
+    multipleBirthExtraLeave: 15,
+    paternityLeave: 15,
+  };
+};

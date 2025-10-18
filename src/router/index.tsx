@@ -7,6 +7,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { Calculator } from '../pages/Calculator';
+import EnhancedCalculator from '../pages/EnhancedCalculator';
+import PolicyComparison from '../pages/PolicyComparison';
 import { Dashboard } from '../pages/Dashboard';
 import { PolicyManagement } from '../pages/admin/PolicyManagement';
 import { CompanySettings } from '../pages/admin/CompanySettings';
@@ -41,7 +43,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'calculator',
+        element: <EnhancedCalculator />,
+      },
+      {
+        path: 'calculator-classic',
         element: <Calculator />,
+      },
+      {
+        path: 'policy-comparison',
+        element: <PolicyComparison />,
       },
       {
         path: 'history',

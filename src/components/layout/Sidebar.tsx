@@ -15,6 +15,7 @@ import {
   BuildingOfficeIcon,
   CalendarIcon,
   XMarkIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -41,7 +42,13 @@ const navigation: NavigationItem[] = [
     name: '产假计算', 
     href: '/calculator', 
     icon: CalculatorIcon,
-    description: '计算产假天数和补贴'
+    description: '智能计算产假天数和补贴'
+  },
+  { 
+    name: '政策对比', 
+    href: '/policy-comparison', 
+    icon: ChartBarIcon,
+    description: '对比不同城市产假政策'
   },
   { 
     name: '计算历史', 

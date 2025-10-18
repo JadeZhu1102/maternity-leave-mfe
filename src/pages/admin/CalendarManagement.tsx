@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
-  Box, 
-  Button, 
-  Container, 
-  Grid, 
-  Typography, 
-  Paper, 
-  Select, 
-  MenuItem, 
-  FormControl, 
+  Container,
+  Box,
+  Typography,
+  Paper,
+  FormControl,
   InputLabel,
+  Select,
+  MenuItem,
+  Button,
   SelectChangeEvent,
   Snackbar,
   Alert,
@@ -33,7 +31,6 @@ import CalendarMonth from '../../components/calendar/CalendarMonth';
 import MonthViewDialog from '../../components/calendar/MonthViewDialog';
 
 const CalendarManagement: React.FC = () => {
-  const navigate = useNavigate();
   const [year, setYear] = useState<number>(dayjs().year());
   const [calendar, setCalendar] = useState<Calendar | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
