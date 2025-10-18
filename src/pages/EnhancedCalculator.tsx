@@ -82,6 +82,7 @@ interface CalculatorState {
   // 社保信息
   socialSecurityBase: number;
   companyBase: number;
+  companyName: string;
 }
 
 const EnhancedCalculator: React.FC = () => {
@@ -100,6 +101,7 @@ const EnhancedCalculator: React.FC = () => {
     abortionWeeks: 0,
     socialSecurityBase: 0,
     companyBase: 0,
+    companyName: 'OCBC',
   });
 
   const [result, setResult] = useState<CalculateResponse | null>(null);
@@ -167,7 +169,7 @@ const EnhancedCalculator: React.FC = () => {
         abortion: state.isAbortion,
         dystocia: state.isDifficultBirth,
         cityName: state.cityCode,
-        companyName: '公司',
+        companyName: state.companyName,
         leaveStartDate: state.leaveStartDate.format('YYYY-MM-DD'),
         calendarCode: 'CN',
         regnancyDays: 0,
@@ -186,7 +188,7 @@ const EnhancedCalculator: React.FC = () => {
           abortion: state.isAbortion,
           dystocia: state.isDifficultBirth,
           cityName: state.cityCode,
-          companyName: '公司',
+          companyName: state.companyName,
           leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
           leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
           calendarCode: 'CN',
@@ -278,6 +280,7 @@ const EnhancedCalculator: React.FC = () => {
       abortionWeeks: 0,
       socialSecurityBase: 0,
       companyBase: 0,
+      companyName: 'OCBC',
     });
     setResult(null);
     setActiveStep(0);
@@ -565,6 +568,18 @@ const EnhancedCalculator: React.FC = () => {
               </AccordionSummary>
               <AccordionDetails>
                 <Stack spacing={3}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="公司"
+                    value={state.companyName}
+                    onChange={(e) => setState({ ...state, companyName: e.target.value })}
+                    sx={{ mb: 2 }}
+                  >
+                    <MenuItem value="OCBC">OCBC</MenuItem>
+                    <MenuItem value="E2P">E2P</MenuItem>
+                  </TextField>
+
                   <TextField
                     fullWidth
                     type="number"
