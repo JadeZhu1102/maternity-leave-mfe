@@ -54,22 +54,32 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Weekday headers */}
       <Box display="grid" gridTemplateColumns="repeat(7, 1fr)" textAlign="center" mb={1}>
         {weekDays.map((day) => (
-          <Typography key={day} variant="caption" fontWeight="medium">
+          <Typography key={day} variant="body2" fontWeight="medium" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
             {day}
           </Typography>
         ))}
       </Box>
 
-      {/* Calendar days */}
+      {/* Calendar days - 固定6行高度 */}
       <Box 
         display="grid" 
         gridTemplateColumns="repeat(7, 1fr)" 
+        gridTemplateRows="repeat(6, 1fr)"
         gap={0.5}
-        sx={{ '& > *': { aspectRatio: '1' } }}
+        sx={{ 
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          '& > *': { 
+            minWidth: 0,
+            minHeight: 0,
+            overflow: 'hidden',
+          } 
+        }}
       >
         {calendarDays.map((day, index) => {
           if (!day) {
@@ -119,21 +129,29 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
               }}
               title={day.description || ''}
             >
-              <Typography variant="caption" sx={{ lineHeight: 1 }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  lineHeight: 1.2,
+                  fontSize: '0.9rem',
+                  fontWeight: isToday ? 600 : 400,
+                }}
+              >
                 {dayjs(day.date).date()}
               </Typography>
               {day.description && (
                 <Typography 
                   variant="caption" 
                   sx={{ 
-                    fontSize: '0.6rem', 
-                    lineHeight: 1,
-                    mt: 0.25,
+                    fontSize: '0.65rem', 
+                    lineHeight: 1.1,
+                    mt: 0.5,
                     textAlign: 'center',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    maxWidth: '100%',
+                    width: '100%',
+                    px: 0.5,
                   }}
                 >
                   {day.description}

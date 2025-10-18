@@ -299,31 +299,33 @@ const CalendarManagement: React.FC = () => {
         </Box>
 
         {(isEditMode ? editedCalendar : calendar) ? (
-          <Grid container spacing={3}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
               const displayCalendar = isEditMode ? editedCalendar : calendar;
               return (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={month}>
+                <Box key={month}>
                   <Paper 
                     elevation={isEditMode ? 3 : 2}
                     sx={{ 
                       p: 2, 
                       cursor: 'pointer',
-                      minHeight: '320px',
+                      height: '380px',
+                      width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       border: isEditMode ? '2px solid' : 'none',
                       borderColor: isEditMode ? 'warning.main' : 'transparent',
+                      boxSizing: 'border-box',
                       '&:hover': {
                         boxShadow: 6,
                       },
                     }}
                     onClick={() => handleMonthClick(month)}
                   >
-                    <Typography variant="h6" gutterBottom textAlign="center">
+                    <Typography variant="h5" gutterBottom textAlign="center" sx={{ mb: 1.5, flexShrink: 0, fontWeight: 500 }}>
                       {month}月
                     </Typography>
-                    <Box sx={{ flexGrow: 1 }}>
+                    <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                       <CalendarMonth 
                         year={year}
                         month={month}
@@ -332,10 +334,10 @@ const CalendarManagement: React.FC = () => {
                       />
                     </Box>
                   </Paper>
-                </Grid>
+                </Box>
               );
             })}
-          </Grid>
+          </Box>
         ) : (
           <Box textAlign="center" py={6}>
             <Typography variant="h6" color="textSecondary" gutterBottom>
