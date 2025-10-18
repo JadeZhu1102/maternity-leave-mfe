@@ -5,8 +5,11 @@
 
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ocbcTheme } from './theme/muiTheme';
 import { router } from './router';
 import './styles/globals.css';
 
@@ -18,11 +21,14 @@ import './styles/globals.css';
  */
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ThemeProvider>
+    <MuiThemeProvider theme={ocbcTheme}>
+      <CssBaseline />
+      <ThemeProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </MuiThemeProvider>
   );
 }
 

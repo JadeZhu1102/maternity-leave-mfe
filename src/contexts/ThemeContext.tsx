@@ -218,32 +218,32 @@ const themes: Record<ThemeType, ThemeConfig> = {
       primary: '#E21833', // OCBC红色
       secondary: '#B30E23', // 深红色
       accent: '#FF4D5F', // 亮红色
-      background: '#F8F9FA', // 浅灰色背景
+      background: '#FFFFFF', // 纯白色背景
       surface: '#FFFFFF', // 白色表面
       text: '#1A202C', // 深灰色文字
       textSecondary: '#4A5568', // 中等灰色文字
-      border: 'rgba(226, 24, 51, 0.1)', // 半透明红色边框
-      success: '#38A169', // 成功绿色
-      warning: '#DD6B20', // 警告橙色
-      error: '#E53E3E' // 错误红色
+      border: '#E5E7EB', // 浅灰色边框
+      success: '#10B981', // 成功绿色
+      warning: '#F59E0B', // 警告橙色
+      error: '#E21833' // 错误红色（使用OCBC红）
     },
     gradients: {
       primary: 'linear-gradient(135deg, #E21833, #FF4D5F)',
-      background: 'linear-gradient(135deg, #F8F9FA 0%, #EDF2F7 100%)',
-      card: 'rgba(255, 255, 255, 0.95)'
+      background: '#FFFFFF',
+      card: '#FFFFFF'
     },
     shadows: {
-      small: '0 4px 20px rgba(226, 24, 51, 0.1)',
-      medium: '0 8px 32px rgba(226, 24, 51, 0.1)',
-      large: '0 12px 48px rgba(226, 24, 51, 0.15)'
+      small: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      medium: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      large: '0 10px 15px rgba(0, 0, 0, 0.1)'
     },
     borderRadius: {
-      small: '12px',
-      medium: '16px',
-      large: '20px'
+      small: '8px',
+      medium: '12px',
+      large: '16px'
     },
     fonts: {
-      primary: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      primary: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       secondary: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     }
   }
@@ -299,13 +299,13 @@ const defaultTheme: ThemeConfig = {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeReady, setThemeReady] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('fresh');
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('ocbc');
   
   // 初始化主题
   useEffect(() => {
     try {
       const saved = localStorage.getItem('app-theme');
-      const initialTheme = saved && themes[saved as ThemeType] ? saved as ThemeType : 'fresh';
+      const initialTheme = saved && themes[saved as ThemeType] ? saved as ThemeType : 'ocbc';
       setCurrentTheme(initialTheme);
       setThemeReady(true);
     } catch (error) {
