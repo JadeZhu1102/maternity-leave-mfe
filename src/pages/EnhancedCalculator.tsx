@@ -471,9 +471,11 @@ const EnhancedCalculator: React.FC = () => {
                       <ToggleButton value="difficult">
                         <Box textAlign="center">
                           <Typography variant="body2">难产</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            +{policyData?.dystociaPolicy?.standardLeaveDays || 15}天
-                          </Typography>
+                          {policyData?.dystociaPolicy?.standardLeaveDays && (
+                            <Typography variant="caption" color="text.secondary">
+                              +{policyData.dystociaPolicy.standardLeaveDays}天
+                            </Typography>
+                          )}
                         </Box>
                       </ToggleButton>
                       <ToggleButton value="abortion">
@@ -488,14 +490,18 @@ const EnhancedCalculator: React.FC = () => {
                   </Box>
 
                   {/* 难产详情 */}
-                  {state.isDifficultBirth && (
+                  {state.isDifficultBirth && policyData?.dystociaPolicy && (
                     <Alert severity="info" icon={<HospitalIcon />}>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>难产额外假期：{policyData?.dystociaPolicy?.standardLeaveDays || 15}天</strong>
-                      </Typography>
-                      <Typography variant="caption">
-                        包括：剖宫产、产钳助产、胎头吸引、臀位助产等情况
-                      </Typography>
+                      {policyData.dystociaPolicy.standardLeaveDays && (
+                        <Typography variant="body2" gutterBottom>
+                          <strong>难产额外假期：{policyData.dystociaPolicy.standardLeaveDays}天</strong>
+                        </Typography>
+                      )}
+                      {policyData.dystociaPolicy.description && (
+                        <Typography variant="caption">
+                          {policyData.dystociaPolicy.description}
+                        </Typography>
+                      )}
                     </Alert>
                   )}
 
@@ -625,16 +631,23 @@ const EnhancedCalculator: React.FC = () => {
                         inputProps={{ min: 0, max: 40 }}
                         helperText="请输入流产时的怀孕周数"
                       />
-                      <Alert severity="warning" sx={{ mt: 2 }}>
-                        <Typography variant="body2">
-                          流产假期规定：
-                        </Typography>
-                        <Typography variant="caption" component="div">
-                          • 怀孕不满4个月：15天<br />
-                          • 怀孕满4个月：42天<br />
-                          • 怀孕满7个月：98天
-                        </Typography>
-                      </Alert>
+                      {policyData?.abortionPolicy && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                          <Typography variant="body2">
+                            流产假期规定：
+                          </Typography>
+                          <Typography variant="caption" component="div">
+                            • 怀孕不满4个月：{policyData.abortionPolicy.earlyPregnancyLeave}天<br />
+                            • 怀孕满4个月：{policyData.abortionPolicy.midTermPregnancyLeave}天<br />
+                            • 怀孕满7个月：{policyData.abortionPolicy.latePregnancyLeave}天
+                          </Typography>
+                          {policyData.abortionPolicy.description && (
+                            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                              {policyData.abortionPolicy.description}
+                            </Typography>
+                          )}
+                        </Alert>
+                      )}
                     </Box>
                   )}
 
@@ -650,9 +663,11 @@ const EnhancedCalculator: React.FC = () => {
                       label={
                         <Box>
                           <Typography variant="body2">是否多胎</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            每多一个婴儿增加{policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15}天
-                          </Typography>
+                          {policyData?.moreInfantPolicy?.extraInfantLeaveDays && (
+                            <Typography variant="caption" color="text.secondary">
+                              每多一个婴儿增加{policyData.moreInfantPolicy.extraInfantLeaveDays}天
+                            </Typography>
+                          )}
                         </Box>
                       }
                     />
@@ -677,7 +692,7 @@ const EnhancedCalculator: React.FC = () => {
                         }}
                         inputProps={{ min: 2, max: 5, step: 1 }}
                         sx={{ mt: 1 }}
-                        helperText={`共增加${(state.infantNumber - 1) * (policyData?.moreInfantPolicy?.extraInfantLeaveDays || 15)}天`}
+                        helperText={policyData?.moreInfantPolicy?.extraInfantLeaveDays ? `共增加${(state.infantNumber - 1) * policyData.moreInfantPolicy.extraInfantLeaveDays}天` : '请选择婴儿数量'}
                       />
                     )}
                   </Box>
