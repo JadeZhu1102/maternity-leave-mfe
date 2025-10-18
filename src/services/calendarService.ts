@@ -46,6 +46,26 @@ const calendarApi = {
     throw new Error(`Only year 2025 is supported`);
   },
 
+  /**
+   * 批量更新整年日历
+   * TODO: 实现真实的API调用
+   */
+  async batchUpdateCalendar(calendar: Calendar): Promise<Calendar> {
+    // Mock implementation
+    console.log('[Mock] Batch updating calendar:', calendar);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // TODO: 当后端API可用时，替换为真实的API调用
+    // const response = await fetch(`/api/v1/calendar/${calendar.id}/batch-update`, {
+    //   method: 'PUT',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(calendar),
+    // });
+    // return response.json();
+    
+    return calendar;
+  },
+
   // 以下方法不再支持，保留接口兼容性
   async generateDefaultCalendar(): Promise<Calendar> {
     return calendar2025;
