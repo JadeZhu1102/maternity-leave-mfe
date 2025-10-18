@@ -12,7 +12,6 @@ import {
   ClockIcon,
   UsersIcon,
   DocumentTextIcon,
-  BuildingOfficeIcon,
   CalendarIcon,
   XMarkIcon,
   ChartBarIcon,
@@ -64,13 +63,6 @@ const navigation: NavigationItem[] = [
     description: '管理城市产假政策'
   },
   { 
-    name: '公司设置', 
-    href: '/admin/company', 
-    icon: BuildingOfficeIcon, 
-    adminOnly: true,
-    description: '配置公司相关设置'
-  },
-  { 
     name: '用户管理', 
     href: '/admin/users', 
     icon: UsersIcon, 
@@ -99,13 +91,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   );
 
   const getThemeIcon = () => {
-    const icons = {
+    const icons: Record<string, string> = {
       fresh: '🌱',
       modern: '💼',
       tech: '⚡',
-      warm: '🌸'
+      warm: '🌸',
+      ocbc: '🏦'
     };
-    return icons[currentTheme];
+    return icons[currentTheme] || '🏦';
   };
 
   return (
