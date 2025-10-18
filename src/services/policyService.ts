@@ -6,7 +6,7 @@ export interface StatutoryPolicy {
   leaveDays: number;
   delayForPublicHoliday: boolean;
   calendarDay: boolean;
-  maxLeaveDays: number;
+  
   description?: string;
 }
 
@@ -62,6 +62,7 @@ export interface PolicyData {
   otherExtendedPolicy?: OtherExtendedPolicy;
   paternityLeavePolicy?: PaternityLeavePolicy;
   allowancePolicy?: AllowancePolicy;
+  maxLeaveDays: number;
   effectiveDate: string; // YYYY-MM-DD
   expirationDate?: string; // YYYY-MM-DD
   lastUpdated: string; // ISO date string

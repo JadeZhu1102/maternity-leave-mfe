@@ -70,10 +70,8 @@ export function PolicyManagement() {
         cityName: policy.cityName,
         statutoryPolicy: {
           leaveDays: policy.statutoryPolicy.leaveDays,
-          maxLeaveDays: policy.statutoryPolicy.maxLeaveDays,
           delayForPublicHoliday: policy.statutoryPolicy.delayForPublicHoliday,
           calendarDay: policy.statutoryPolicy.calendarDay,
-          bonusLeaveDays: policy.statutoryPolicy.maxLeaveDays - policy.statutoryPolicy.leaveDays
         },
         dystociaPolicy: {
           standardLeaveDays: policy.dystociaPolicy.standardLeaveDays,
@@ -81,7 +79,7 @@ export function PolicyManagement() {
           calendarDay: policy.dystociaPolicy.calendarDay
         },
         moreInfantPolicy: {
-          leaveDays: policy.moreInfantPolicy.leaveDays,
+          extraInfantLeaveDays: policy.moreInfantPolicy.extraInfantLeaveDays,
           delayForPublicHoliday: policy.moreInfantPolicy.delayForPublicHoliday,
           calendarDay: policy.moreInfantPolicy.calendarDay
         },
@@ -90,6 +88,7 @@ export function PolicyManagement() {
           delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday,
           calendarDay: policy.otherExtendedPolicy.calendarDay
         },
+        maxLeaveDays: policy.maxLeaveDays,
         isActive: true,
         effectiveDate: policy.effectiveDate,
         createdAt: policy.lastUpdated,
@@ -260,10 +259,9 @@ export function PolicyManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">{policy.maxLeaveDays} 天</span>
-                        <span className="text-xs text-gray-500">
-                          {policy.statutoryPolicy.calendarDay ? '日历日' : '工作日'}
-                        </span>
+                        {policy.maxLeaveDays != null && (
+                          <span className="text-sm text-gray-900">{policy.maxLeaveDays} 天</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
