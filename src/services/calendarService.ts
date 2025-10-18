@@ -5,11 +5,11 @@ import { generateYearMonths } from './__mocks__/calendarMockData';
 const generate2025Calendar = (): Calendar => {
   return {
     id: '2025',
-    name: '2025年中国大陆工作日历',
+    name: '2025年日历',
     year: 2025,
-    description: '2025年中国大陆标准工作日历，包含法定节假日和调休安排',
+    description: '2025年标准日历',
     isDefault: true,
-    months: generateYearMonths(2025, 'CN', 'mainland'),
+    months: generateYearMonths(2025),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

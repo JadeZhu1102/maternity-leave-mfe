@@ -34,8 +34,6 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const dayData = days.find(d => d.date === dateStr) || {
       date: dateStr,
-      isWorkingDay: true, // Default to working day
-      isHoliday: false,
     };
     calendarDays.push(dayData);
   }
@@ -92,42 +90,16 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
                 position: 'relative',
                 fontSize: '0.8rem',
                 fontWeight: isToday ? 'bold' : 'normal',
-                backgroundColor: day.isHoliday 
-                  ? 'error.light' 
-                  : !day.isWorkingDay 
-                    ? 'action.hover' 
-                    : isWeekend 
-                      ? 'action.selected' 
-                      : 'background.paper',
-                color: day.isHoliday 
-                  ? 'error.contrastText' 
-                  : !day.isWorkingDay 
-                    ? 'text.secondary' 
-                    : isWeekend 
-                      ? 'primary.contrastText' 
-                      : 'text.primary',
+                backgroundColor: isWeekend ? 'action.hover' : 'background.paper',
+                color: isWeekend ? 'text.secondary' : 'text.primary',
                 border: isToday ? '2px solid' : '1px solid',
                 borderColor: isToday ? 'primary.main' : 'divider',
                 '&:hover': {
                   opacity: 0.8,
                 },
               }}
-              title={day.description || ''}
             >
               {dayjs(day.date).date()}
-              {day.isHoliday && (
-                <Box 
-                  sx={{
-                    position: 'absolute',
-                    top: 2,
-                    right: 2,
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    bgcolor: 'error.main',
-                  }} 
-                />
-              )}
             </Box>
           );
         })}

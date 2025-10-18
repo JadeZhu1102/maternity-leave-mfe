@@ -532,8 +532,6 @@ class MockDataService {
     } else {
       monthData.days.push({
         date,
-        isWorkingDay: true,
-        isHoliday: false,
         ...updates
       });
       
@@ -549,9 +547,9 @@ class MockDataService {
     
     const newCalendar: Calendar = {
       id: `cal_${Date.now()}`,
-      name: `${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      name: `${payload.year}年日历`,
       year: payload.year,
-      description: `自动生成的${payload.year}年${payload.region ? payload.region + ' ' : ''}工作日历`,
+      description: `自动生成的${payload.year}年标准日历`,
       isDefault: false,
       months: Array.from({ length: 12 }, (_, i) => ({
         year: payload.year,

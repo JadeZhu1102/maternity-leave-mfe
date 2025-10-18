@@ -77,9 +77,6 @@ const CalendarManagement: React.FC = () => {
       const payload: UpdateCalendarDayPayload = {
         calendarId: calendar.id,
         date,
-        isWorkingDay: updates.isWorkingDay ?? false,
-        isHoliday: updates.isHoliday ?? false,
-        description: updates.description
       };
       const updatedCalendar = await calendarApi.updateCalendarDay(payload);
       setCalendar(updatedCalendar);
@@ -96,8 +93,6 @@ const CalendarManagement: React.FC = () => {
       setLoading(true);
       const payload: GenerateDefaultCalendarPayload = {
         year,
-        countryCode: 'CN',
-        region: 'shanghai'
       };
       const newCalendar = await calendarApi.generateDefaultCalendar(payload);
       setCalendar(newCalendar);
@@ -217,11 +212,11 @@ const CalendarManagement: React.FC = () => {
                 value={newCalendarName}
                 onChange={(e) => setNewCalendarName(e.target.value)}
                 variant="outlined"
-                placeholder={`例如: ${year}年工作日历`}
+                placeholder={`例如: ${year}年日历`}
               />
               <Box mt={2}>
                 <Typography variant="body2" color="textSecondary">
-                  将基于{year}年的法定节假日和工作日安排生成新的日历
+                  将生成{year}年的标准日历
                 </Typography>
               </Box>
             </Box>

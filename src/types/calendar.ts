@@ -1,10 +1,5 @@
-import { Dayjs } from 'dayjs';
-
 export interface CalendarDay {
   date: string; // YYYY-MM-DD format
-  isWorkingDay: boolean;
-  isHoliday: boolean;
-  description?: string; // e.g., "春节", "国庆节"
 }
 
 export interface MonthCalendar {
@@ -32,13 +27,8 @@ export interface CalendarFilter {
 export interface UpdateCalendarDayPayload {
   calendarId: string;
   date: string;
-  isWorkingDay: boolean;
-  isHoliday: boolean;
-  description?: string;
 }
 
 export interface GenerateDefaultCalendarPayload {
   year: number;
-  countryCode?: string; // e.g., 'CN' for China
-  region?: string;      // e.g., 'shanghai' for specific regions
 }
