@@ -1,7 +1,7 @@
-// import axios from 'axios';
+import axios from 'axios';
 import { SpecialDate } from '../types/calendar';
 
-// const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 // Mock data for 2024 (based on the provided example)
 const mock2024SpecialDates: SpecialDate[] = [
@@ -91,23 +91,24 @@ const specialDateApi = {
    * GET /api/v1/calendar/special-dates/{calendarCode}?year={year}
    */
   async getSpecialDates(calendarCode: string = 'CN', year: number): Promise<SpecialDate[]> {
-    // TODO: 当后端API可用时，取消注释以下代码
-    // try {
-    //   const response = await axios.get<SpecialDate[]>(
-    //     `${API_BASE_URL}/calendar/special-dates/${calendarCode}`,
-    //     { params: { year } }
-    //   );
-    //   return response.data;
-    // } catch (error) {
-    //   console.error('Error fetching special dates:', error);
-    //   throw error;
-    // }
-
-    // Mock implementation
-    console.log(`[Mock] Fetching special dates for ${calendarCode} year ${year}`);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    
-    return mockDataByYear[year] || [];
+    // 使用真实API
+    try {
+      const response = await axios.get<SpecialDate[]>(
+        `${API_BASE_URL}/api/v1/calendar/special-dates/${calendarCode}`,
+        { params: { year } }
+      );
+      console.log('[API] Fetched special dates:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching special dates:', error);
+      
+      // Mock数据作为降级方案（已注释）
+      // console.log(`[Mock] Fetching special dates for ${calendarCode} year ${year}`);
+      // await new Promise(resolve => setTimeout(resolve, 500));
+      // return mockDataByYear[year] || [];
+      
+      throw error;
+    }
   }
 };
 

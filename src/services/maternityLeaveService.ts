@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export interface DateCalculateRequest {
   staffName: string;
@@ -49,12 +49,13 @@ export interface CalculateResponse {
 export const calculateLeaveDates = async (data: DateCalculateRequest): Promise<CalculateResponse> => {
   try {
     const response = await axios.post<CalculateResponse>(
-      `${API_BASE_URL}/maternity-leave/calculateDate`,
+      `${API_BASE_URL}/api/v1/maternity-leave/calculateDate`,
       data
     );
+    console.log('[API] Calculate leave dates response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error calculating leave dates:', error);
+    console.error('[API] Error calculating leave dates:', error);
     throw error;
   }
 };
@@ -69,12 +70,13 @@ export const calculateAllowance = async (data: AllowanceCalculateRequest): Promi
     };
 
     const response = await axios.post<CalculateResponse>(
-      `${API_BASE_URL}/maternity-leave/calculateMoney`,
+      `${API_BASE_URL}/api/v1/maternity-leave/calculateMoney`,
       requestData
     );
+    console.log('[API] Calculate allowance response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error calculating allowance:', error);
+    console.error('[API] Error calculating allowance:', error);
     throw error;
   }
 };
