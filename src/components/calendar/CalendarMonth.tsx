@@ -32,10 +32,12 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
   // Add the days of the month
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayData = days.find(d => d.date === dateStr) || {
-      date: dateStr,
-    };
-    calendarDays.push(dayData);
+    const dayData = days.find(d => d.date === dateStr);
+    if (dayData) {
+      calendarDays.push(dayData);
+    } else {
+      calendarDays.push({ date: dateStr });
+    }
   }
 
   // Calculate number of rows needed (6 rows to accommodate all possible month layouts)
@@ -77,12 +79,17 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
           const isWeekend = [0, 6].includes(dayjs(day.date).day());
           const isToday = dayjs().format('YYYY-MM-DD') === day.date;
           
+          // 判断是否为特殊日期
+          const isHoliday = day.isWorkday === false; // 节假日
+          const isAdjustedWorkday = day.isWorkday === true; // 调班（周末上班）
+          
           return (
             <Box
               key={day.date}
               onClick={() => handleDayClick(day)}
               sx={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '4px',
@@ -90,16 +97,48 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
                 position: 'relative',
                 fontSize: '0.8rem',
                 fontWeight: isToday ? 'bold' : 'normal',
-                backgroundColor: isWeekend ? 'action.hover' : 'background.paper',
-                color: isWeekend ? 'text.secondary' : 'text.primary',
+                backgroundColor: isHoliday 
+                  ? 'error.light' 
+                  : isAdjustedWorkday 
+                    ? 'warning.light'
+                    : isWeekend 
+                      ? 'action.hover' 
+                      : 'background.paper',
+                color: isHoliday 
+                  ? 'error.contrastText' 
+                  : isAdjustedWorkday
+                    ? 'warning.contrastText'
+                    : isWeekend 
+                      ? 'text.secondary' 
+                      : 'text.primary',
                 border: isToday ? '2px solid' : '1px solid',
                 borderColor: isToday ? 'primary.main' : 'divider',
                 '&:hover': {
                   opacity: 0.8,
                 },
               }}
+              title={day.description || ''}
             >
-              {dayjs(day.date).date()}
+              <Typography variant="caption" sx={{ lineHeight: 1 }}>
+                {dayjs(day.date).date()}
+              </Typography>
+              {day.description && (
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontSize: '0.6rem', 
+                    lineHeight: 1,
+                    mt: 0.25,
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                  }}
+                >
+                  {day.description}
+                </Typography>
+              )}
             </Box>
           );
         })}

@@ -95,33 +95,75 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
               const isWeekend = [0, 6].includes(dayjs(day.date).day());
               const isToday = dayjs().format('YYYY-MM-DD') === day.date;
               
+              // 判断是否为特殊日期
+              const isHoliday = day.isWorkday === false; // 节假日
+              const isAdjustedWorkday = day.isWorkday === true; // 调班（周末上班）
+              
               return (
                 <Box
                   key={day.date}
                   sx={{
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 1,
                     p: 0.5,
                     border: isToday ? '2px solid' : '1px solid',
                     borderColor: isToday ? 'primary.main' : 'divider',
-                    backgroundColor: isWeekend ? 'action.hover' : 'background.paper',
+                    backgroundColor: isHoliday 
+                      ? 'error.light' 
+                      : isAdjustedWorkday 
+                        ? 'warning.light'
+                        : isWeekend 
+                          ? 'action.hover' 
+                          : 'background.paper',
                   }}
+                  title={day.description || ''}
                 >
                   <Typography 
                     variant="body2" 
                     fontWeight={isToday ? 'bold' : 'normal'}
-                    color={isWeekend ? 'text.secondary' : 'text.primary'}
+                    color={isHoliday 
+                      ? 'error.contrastText' 
+                      : isAdjustedWorkday
+                        ? 'warning.contrastText'
+                        : isWeekend 
+                          ? 'text.secondary' 
+                          : 'text.primary'}
                   >
                     {dayjs(day.date).date()}
                   </Typography>
+                  {day.description && (
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        fontSize: '0.65rem',
+                        textAlign: 'center',
+                        color: isHoliday 
+                          ? 'error.contrastText' 
+                          : isAdjustedWorkday
+                            ? 'warning.contrastText'
+                            : 'text.secondary',
+                      }}
+                    >
+                      {day.description}
+                    </Typography>
+                  )}
                 </Box>
               );
             })}
           </Box>
           
           <Box mt={2} display="flex" gap={2} flexWrap="wrap">
+            <Box display="flex" alignItems="center">
+              <Box width={16} height={16} bgcolor="error.light" mr={1} borderRadius={1} />
+              <Typography variant="caption">节假日</Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <Box width={16} height={16} bgcolor="warning.light" mr={1} borderRadius={1} />
+              <Typography variant="caption">调班</Typography>
+            </Box>
             <Box display="flex" alignItems="center">
               <Box width={16} height={16} bgcolor="action.hover" mr={1} borderRadius={1} />
               <Typography variant="caption">周末</Typography>

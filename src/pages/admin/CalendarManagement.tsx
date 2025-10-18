@@ -27,7 +27,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import calendarApi from '../../services/calendarService';
-import { Calendar, CalendarDay, UpdateCalendarDayPayload, GenerateDefaultCalendarPayload } from '../../types/calendar';
+import specialDateApi from '../../services/specialDateService';
+import { Calendar, CalendarDay, UpdateCalendarDayPayload, GenerateDefaultCalendarPayload, SpecialDate } from '../../types/calendar';
 import CalendarMonth from '../../components/calendar/CalendarMonth';
 import MonthViewDialog from '../../components/calendar/MonthViewDialog';
 
@@ -42,13 +43,22 @@ const CalendarManagement: React.FC = () => {
   const [newCalendarDialogOpen, setNewCalendarDialogOpen] = useState<boolean>(false);
   const [newCalendarName, setNewCalendarName] = useState<string>('');
 
-  // Fetch calendar data
+  // Fetch calendar data and special dates
   useEffect(() => {
     const fetchCalendar = async () => {
       try {
         setLoading(true);
-        const data = await calendarApi.getDefaultCalendar(year);
-        setCalendar(data);
+        
+        // 获取基础日历数据
+        const calendarData = await calendarApi.getDefaultCalendar(year);
+        
+        // 获取特殊日期（节假日和调班）
+        const specialDates = await specialDateApi.getSpecialDates('CN', year);
+        
+        // 将特殊日期合并到日历数据中
+        const updatedCalendar = mergeSpecialDatesIntoCalendar(calendarData, specialDates);
+        
+        setCalendar(updatedCalendar);
       } catch (err) {
         setError('Failed to load calendar');
         console.error('Error fetching calendar:', err);
@@ -59,6 +69,51 @@ const CalendarManagement: React.FC = () => {
 
     fetchCalendar();
   }, [year]);
+  
+  // 将特殊日期合并到日历数据中
+  const mergeSpecialDatesIntoCalendar = (calendar: Calendar, specialDates: SpecialDate[]): Calendar => {
+    const updatedMonths = calendar.months.map(month => {
+      const updatedDays = month.days.map(day => {
+        const specialDate = specialDates.find(sd => sd.calendarDate === day.date);
+        if (specialDate) {
+          return {
+            ...day,
+            isWorkday: specialDate.isWorkday,
+            description: specialDate.description,
+          };
+        }
+        return day;
+      });
+      
+      // 添加月份中还没有的特殊日期
+      specialDates.forEach(sd => {
+        const sdDate = new Date(sd.calendarDate);
+        if (sdDate.getFullYear() === month.year && sdDate.getMonth() + 1 === month.month) {
+          const exists = updatedDays.some(d => d.date === sd.calendarDate);
+          if (!exists) {
+            updatedDays.push({
+              date: sd.calendarDate,
+              isWorkday: sd.isWorkday,
+              description: sd.description,
+            });
+          }
+        }
+      });
+      
+      // 按日期排序
+      updatedDays.sort((a, b) => a.date.localeCompare(b.date));
+      
+      return {
+        ...month,
+        days: updatedDays,
+      };
+    });
+    
+    return {
+      ...calendar,
+      months: updatedMonths,
+    };
+  };
 
   const handleYearChange = (event: SelectChangeEvent<number>) => {
     setYear(Number(event.target.value));
