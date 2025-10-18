@@ -18,7 +18,6 @@ interface CityPolicy {
   cityName: string;
   statutoryPolicy: {
     leaveDays: number;
-    maxLeaveDays: number;
     delayForPublicHoliday: boolean;
     calendarDay: boolean;
     bonusLeaveDays: number; // 添加奖励假字段
@@ -29,11 +28,17 @@ interface CityPolicy {
     calendarDay: boolean;
   };
   moreInfantPolicy: {
-    leaveDays: number;
+    extraInfantLeaveDays: number;
+    delayForPublicHoliday: boolean;
+    calendarDay: boolean;
+  };
+  otherExtendedPolicy: {
+    standardLeaveDays: number;
     delayForPublicHoliday: boolean;
     calendarDay: boolean;
   };
   isActive: boolean;
+  maxLeaveDays: number;
   effectiveDate: string;
   createdAt: string;
   updatedAt: string;
@@ -79,6 +84,11 @@ export function PolicyManagement() {
           leaveDays: policy.moreInfantPolicy.leaveDays,
           delayForPublicHoliday: policy.moreInfantPolicy.delayForPublicHoliday,
           calendarDay: policy.moreInfantPolicy.calendarDay
+        },
+        otherExtendedPolicy: {
+          standardLeaveDays: policy.otherExtendedPolicy.standardLeaveDays,
+          delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday,
+          calendarDay: policy.otherExtendedPolicy.calendarDay
         },
         isActive: true,
         effectiveDate: policy.effectiveDate,
@@ -237,7 +247,7 @@ export function PolicyManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-gray-900">{policy.cityName}</span>
-                        <span className="text-xs text-gray-500">生效日: {policy.effectiveDate}</span>
+                        {/* <span className="text-xs text-gray-500">生效日: {policy.effectiveDate}</span> */}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -250,7 +260,7 @@ export function PolicyManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">{policy.statutoryPolicy.maxLeaveDays} 天</span>
+                        <span className="text-sm text-gray-900">{policy.maxLeaveDays} 天</span>
                         <span className="text-xs text-gray-500">
                           {policy.statutoryPolicy.calendarDay ? '日历日' : '工作日'}
                         </span>
@@ -260,23 +270,26 @@ export function PolicyManagement() {
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">{policy.dystociaPolicy.standardLeaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          {policy.dystociaPolicy.delayForPublicHoliday ? '日历日' : '工作日'}
+                          {policy.dystociaPolicy.calendarDay ? '日历日' : '工作日'}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">{policy.moreInfantPolicy.leaveDays} 天</span>
+                        <span className="text-sm text-gray-900">{policy.moreInfantPolicy.extraInfantLeaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          {policy.moreInfantPolicy.delayForPublicHoliday ? '日历日' : '工作日'}
+                          {policy.moreInfantPolicy.calendarDay ? '日历日' : '工作日'}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">{policy.statutoryPolicy.bonusLeaveDays} 天</span>
+                        <span className="text-sm text-gray-900">{policy.otherExtendedPolicy.standardLeaveDays} 天</span>
                         <span className="text-xs text-gray-500">
-                          奖励假
+                          {policy.otherExtendedPolicy.calendarDay ? '日历日' : '工作日'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {policy.otherExtendedPolicy.delayForPublicHoliday ? '遇到公共假期顺延' : '遇到公共假期不顺延'}
                         </span>
                       </div>
                     </td>

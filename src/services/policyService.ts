@@ -32,6 +32,12 @@ export interface AbortionPolicy {
   description?: string;
 }
 
+export interface OtherExtendedPolicy {
+  standardLeaveDays: number;
+  delayForPublicHoliday: boolean;
+  calendarDay: boolean;
+}
+
 export interface PaternityLeavePolicy {
   leaveDays: number;
   description?: string;
@@ -53,6 +59,7 @@ export interface PolicyData {
   dystociaPolicy: DystociaPolicy;
   moreInfantPolicy: MoreInfantPolicy;
   abortionPolicy?: AbortionPolicy;
+  otherExtendedPolicy?: OtherExtendedPolicy;
   paternityLeavePolicy?: PaternityLeavePolicy;
   allowancePolicy?: AllowancePolicy;
   effectiveDate: string; // YYYY-MM-DD
