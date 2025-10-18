@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { cn } from '../../utils/cn';
 import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import EditPolicyModal from '../../components/policy/EditPolicyModal';
+import { getAllPolicies, type PolicyData } from '../../services/policyService';
 
 // Define the CityPolicy interface
 interface CityPolicy {
@@ -55,88 +56,37 @@ export function PolicyManagement() {
   const loadPolicies = async () => {
     setIsLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 调用真实API获取所有政策
+      const apiPolicies = await getAllPolicies();
       
-      const mockPolicies: CityPolicy[] = [
-        {
-          id: '1',
-          cityName: '北京',
-          statutoryPolicy: {
-            leaveDays: 98,
-            maxLeaveDays: 128,
-            delayForPublicHoliday: true,
-            calendarDay: false,
-            bonusLeaveDays: 30 // 北京奖励假30天
-          },
-          dystociaPolicy: {
-            standardLeaveDays: 15,
-            delayForPublicHoliday: true,
-            calendarDay: false
-          },
-          moreInfantPolicy: {
-            leaveDays: 15,
-            delayForPublicHoliday: true,
-            calendarDay: false
-          },
-          isActive: true,
-          effectiveDate: '2023-01-01',
-          createdAt: '2023-01-01T00:00:00Z',
-          updatedAt: '2023-01-01T00:00:00Z'
+      // 将API数据转换为组件需要的格式
+      const formattedPolicies: CityPolicy[] = apiPolicies.map((policy, index) => ({
+        id: String(index + 1),
+        cityName: policy.cityName,
+        statutoryPolicy: {
+          leaveDays: policy.statutoryPolicy.leaveDays,
+          maxLeaveDays: policy.statutoryPolicy.maxLeaveDays,
+          delayForPublicHoliday: policy.statutoryPolicy.delayForPublicHoliday,
+          calendarDay: policy.statutoryPolicy.calendarDay,
+          bonusLeaveDays: policy.statutoryPolicy.maxLeaveDays - policy.statutoryPolicy.leaveDays
         },
-        {
-          id: '2',
-          cityName: '上海',
-          statutoryPolicy: {
-            leaveDays: 98,
-            maxLeaveDays: 128,
-            delayForPublicHoliday: true,
-            calendarDay: true,
-            bonusLeaveDays: 30 // 上海奖励假30天
-          },
-          dystociaPolicy: {
-            standardLeaveDays: 15,
-            delayForPublicHoliday: true,
-            calendarDay: true
-          },
-          moreInfantPolicy: {
-            leaveDays: 15,
-            delayForPublicHoliday: true,
-            calendarDay: true
-          },
-          isActive: true,
-          effectiveDate: '2023-01-01',
-          createdAt: '2023-01-01T00:00:00Z',
-          updatedAt: '2023-01-01T00:00:00Z'
+        dystociaPolicy: {
+          standardLeaveDays: policy.dystociaPolicy.standardLeaveDays,
+          delayForPublicHoliday: policy.dystociaPolicy.delayForPublicHoliday,
+          calendarDay: policy.dystociaPolicy.calendarDay
         },
-        {
-          id: '3',
-          cityName: '广州',
-          statutoryPolicy: {
-            leaveDays: 98,
-            maxLeaveDays: 178,
-            delayForPublicHoliday: false,
-            calendarDay: true,
-            bonusLeaveDays: 80 // 广州奖励假80天
-          },
-          dystociaPolicy: {
-            standardLeaveDays: 30,
-            delayForPublicHoliday: false,
-            calendarDay: true
-          },
-          moreInfantPolicy: {
-            leaveDays: 15,
-            delayForPublicHoliday: false,
-            calendarDay: true
-          },
-          isActive: false,
-          effectiveDate: '2023 年 1 月 1 日',
-          createdAt: '2023-01-01T00:00:00Z',
-          updatedAt: '2023-01-01T00:00:00Z',
+        moreInfantPolicy: {
+          leaveDays: policy.moreInfantPolicy.leaveDays,
+          delayForPublicHoliday: policy.moreInfantPolicy.delayForPublicHoliday,
+          calendarDay: policy.moreInfantPolicy.calendarDay
         },
-      ];
+        isActive: true,
+        effectiveDate: policy.effectiveDate,
+        createdAt: policy.lastUpdated,
+        updatedAt: policy.lastUpdated
+      }));
 
-      setPolicies(mockPolicies);
+      setPolicies(formattedPolicies);
     } catch (error) {
       console.error('加载政策数据失败:', error);
     } finally {
@@ -161,18 +111,18 @@ export function PolicyManagement() {
     if (!policyToDelete) return;
     
     try {
-      // 这里应该调用实际的API
+      // TODO: 调用真实API删除政策
+      // await deletePolicyAPI(policyToDelete);
+      
+      // 暂时使用本地删除，等待后端删除API
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setPolicies(prev => prev.filter(policy => policy.id !== policyToDelete));
       
-      // 重置删除状态
       setPolicyToDelete(null);
-      // 这里可以添加一个 toast 通知，而不是使用 alert
       console.log('政策删除成功');
     } catch (error) {
       console.error('删除政策失败:', error);
-      // 这里可以添加一个错误 toast 通知
       console.error('删除政策失败，请重试');
     } finally {
       setShowDeleteDialog(false);
