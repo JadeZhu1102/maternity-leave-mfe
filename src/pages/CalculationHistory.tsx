@@ -5,34 +5,25 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { 
   MagnifyingGlassIcon, 
   FunnelIcon, 
   DocumentArrowDownIcon,
-  CalendarIcon 
+  CalendarIcon,
+  EyeIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
-interface CalculationRecord {
-  id: string;
-  userName: string;
-  city: string;
-  baseMaternityDays: number;
-  additionalDays: number;
-  totalDays: number;
-  allowanceAmount: number;
-  calculationType: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import calculationHistoryService, { CalculationHistoryRecord } from '../services/calculationHistoryService';
+import { SUPPORTED_CITIES } from '../constants/supportedCities';
 
 export function CalculationHistory() {
   const { hasRole } = useAuth();
-  const [records, setRecords] = useState<CalculationRecord[]>([]);
+  const [records, setRecords] = useState<CalculationHistoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [dateRange, setDateRange] = useState('');
@@ -43,6 +34,10 @@ export function CalculationHistory() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   
+  // Detail dialog state
+  const [selectedRecord, setSelectedRecord] = useState<CalculationHistoryRecord | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  
   // Admin role check (commented out for future use)
   // const isAdmin = hasRole('ADMIN') || hasRole('SUPER_ADMIN');
 
@@ -52,53 +47,27 @@ export function CalculationHistory() {
 
   const loadCalculationHistory = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 调用真实API
+      const params = {
+        staffName: searchTerm || undefined,
+        cityCode: selectedCity || undefined,
+        startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        page: currentPage,
+        pageSize: 10,
+      };
+
+      const data = await calculationHistoryService.getCalculateHistory(params);
+      setRecords(data);
       
-      const mockRecords: CalculationRecord[] = [
-        {
-          id: '1',
-          userName: '张三',
-          city: '北京市',
-          baseMaternityDays: 98,
-          additionalDays: 30,
-          totalDays: 128,
-          allowanceAmount: 15600,
-          calculationType: '标准产假',
-          createdAt: '2024-01-15',
-          updatedAt: '2024-01-15',
-        },
-        {
-          id: '2',
-          userName: '李四',
-          city: '上海市',
-          baseMaternityDays: 98,
-          additionalDays: 60,
-          totalDays: 158,
-          allowanceAmount: 18900,
-          calculationType: '难产产假',
-          createdAt: '2024-01-10',
-          updatedAt: '2024-01-10',
-        },
-        {
-          id: '3',
-          userName: '王五',
-          city: '广州市',
-          baseMaternityDays: 98,
-          additionalDays: 15,
-          totalDays: 113,
-          allowanceAmount: 13560,
-          calculationType: '标准产假',
-          createdAt: '2024-01-08',
-          updatedAt: '2024-01-08',
-        },
-      ];
-      
-      setRecords(mockRecords);
-      setTotalPages(1);
-    } catch (error) {
-      console.error('加载计算历史失败:', error);
+      // 计算总页数（假设后端返回所有数据，前端分页）
+      setTotalPages(Math.ceil(data.length / 10));
+    } catch (err: any) {
+      const errorMessage = err.message || '加载计算历史失败';
+      setError(errorMessage);
+      console.error('加载计算历史失败:', err);
     } finally {
       setIsLoading(false);
     }
@@ -108,11 +77,31 @@ export function CalculationHistory() {
     console.log('Exporting data...');
   };
 
-  const handleViewDetail = (recordId: string) => {
-    console.log('查看详情:', recordId);
+  const handleViewDetail = (record: CalculationHistoryRecord) => {
+    setSelectedRecord(record);
+    setShowDetailDialog(true);
   };
 
-  const cities = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '南京市'];
+  const handleCloseDetail = () => {
+    setShowDetailDialog(false);
+    setSelectedRecord(null);
+  };
+
+  // 获取城市名称
+  const getCityName = (cityCode: string) => {
+    const city = SUPPORTED_CITIES.find(c => c.code.toLowerCase() === cityCode.toLowerCase());
+    return city ? city.name : cityCode;
+  };
+
+  // 获取计算类型
+  const getCalculationType = (record: CalculationHistoryRecord) => {
+    if (record.abortion) return '流产假';
+    if (record.leaveDetail.dystociaLeaveDays > 0) return '难产产假';
+    if (record.leaveDetail.moreInfantLeaveDays > 0) return '多胎产假';
+    return '标准产假';
+  };
+
+  const cities = SUPPORTED_CITIES;
 
   if (isLoading) {
     return (
@@ -125,6 +114,13 @@ export function CalculationHistory() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
+        {/* 错误提示 */}
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <strong className="font-bold">错误：</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1 sm:mb-2">计算历史记录</h1>
@@ -199,7 +195,7 @@ export function CalculationHistory() {
                 >
                   <option value="">所有城市</option>
                   {cities.map(city => (
-                    <option key={city} value={city}>{city}</option>
+                    <option key={city.code} value={city.code}>{city.name}</option>
                   ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -285,63 +281,65 @@ export function CalculationHistory() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {records.length > 0 ? (
-                  records.map((record) => (
-                    <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {record.id.slice(0, 6)}...
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-medium text-sm">
-                              {record.userName.charAt(0)}
-                            </span>
+                  records.map((record) => {
+                    const calculationType = getCalculationType(record);
+                    const cityName = getCityName(record.cityCode);
+                    
+                    return (
+                      <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            #{record.id}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-blue-600 font-medium text-sm">
+                                {record.staffName.charAt(0)}
+                              </span>
+                            </div>
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-gray-900">{record.staffName}</div>
+                              <div className="text-xs text-gray-500 sm:hidden">{cityName}</div>
+                            </div>
                           </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">{record.userName}</div>
-                            <div className="text-xs text-gray-500 sm:hidden">{record.city}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{record.city}</div>
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          record.calculationType === '标准产假' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {record.calculationType}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-900 font-medium">
-                        {record.totalDays}天
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-blue-600">
-                        ¥{record.allowanceAmount.toLocaleString()}
-                      </td>
-                      <td className="hidden lg:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(record.createdAt).toLocaleDateString('zh-CN', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleViewDetail(record.id)}
-                          className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors"
-                        >
-                          查看
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{cityName}</div>
+                        </td>
+                        <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            calculationType === '标准产假' 
+                              ? 'bg-green-100 text-green-800' 
+                              : calculationType === '流产假'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {calculationType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-900 font-medium">
+                          {record.leaveDetail.currentLeaveDays}天
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-blue-600">
+                          ¥{record.allowanceDetail.allowance.toLocaleString()}
+                        </td>
+                        <td className="hidden lg:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {record.leaveStartDate}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleViewDetail(record)}
+                            className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors inline-flex items-center"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            查看
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
@@ -444,6 +442,146 @@ export function CalculationHistory() {
             </div>
           )}
         </div>
+
+        {/* 详情对话框 */}
+        {showDetailDialog && selectedRecord && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={handleCloseDetail}>
+            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+              {/* 对话框标题 */}
+              <div className="flex justify-between items-center pb-3 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  计算详情 - {selectedRecord.staffName}
+                </h3>
+                <button
+                  onClick={handleCloseDetail}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* 对话框内容 */}
+              <div className="mt-4 space-y-4 max-h-96 overflow-y-auto">
+                {/* 基本信息 */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">基本信息</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">员工姓名：</span>
+                      <span className="font-medium">{selectedRecord.staffName}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">城市：</span>
+                      <span className="font-medium">{getCityName(selectedRecord.cityCode)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">休假开始日期：</span>
+                      <span className="font-medium">{selectedRecord.leaveStartDate}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">计算类型：</span>
+                      <span className="font-medium">{getCalculationType(selectedRecord)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 假期详情 */}
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-green-900 mb-2">假期详情</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">休假开始：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.leaveStartDate}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">休假结束：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.leaveEndDate}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">当前休假天数：</span>
+                      <span className="font-medium text-green-600">{selectedRecord.leaveDetail.currentLeaveDays}天</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">法定产假：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.statutoryLeaveDays}天</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">难产假：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.dystociaLeaveDays}天</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">多胎假：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.moreInfantLeaveDays}天</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">其他延长假：</span>
+                      <span className="font-medium">{selectedRecord.leaveDetail.otherExtendedLeaveDays}天</span>
+                    </div>
+                    {selectedRecord.abortion && (
+                      <div>
+                        <span className="text-gray-600">流产假：</span>
+                        <span className="font-medium">{selectedRecord.leaveDetail.abortionLeaveDays}天</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 津贴详情 */}
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-purple-900 mb-2">津贴详情</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">生育津贴：</span>
+                      <span className="font-medium text-purple-600">¥{selectedRecord.allowanceDetail.allowance.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">补差金额：</span>
+                      <span className="font-medium">¥{selectedRecord.allowanceDetail.compensation.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">第一个月工资：</span>
+                      <span className="font-medium">¥{selectedRecord.allowanceDetail.firstMonthSalary.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">最后一个月工资：</span>
+                      <span className="font-medium">¥{selectedRecord.allowanceDetail.lastMonthSalary.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">其他月份工资：</span>
+                      <span className="font-medium">¥{selectedRecord.allowanceDetail.otherMonthSalary.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">总工资：</span>
+                      <span className="font-medium text-purple-600">¥{selectedRecord.allowanceDetail.totalSalary.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 计算说明 */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-2">计算说明</h4>
+                  <div className="space-y-1 text-xs text-gray-700 max-h-60 overflow-y-auto">
+                    {selectedRecord.calculateComments.descriptionList.map((desc, index) => (
+                      <div key={index} className="py-1 border-b border-gray-200 last:border-0">
+                        {index + 1}. {desc}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 对话框底部 */}
+              <div className="mt-4 pt-3 border-t flex justify-end">
+                <button
+                  onClick={handleCloseDetail}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
