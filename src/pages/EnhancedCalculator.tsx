@@ -794,6 +794,7 @@ const EnhancedCalculator: React.FC = () => {
                 size="large"
                 startIcon={<RefreshIcon />}
                 onClick={handleReset}
+                sx={{ minWidth: 120, whiteSpace: 'nowrap' }}
               >
                 重置
               </Button>
