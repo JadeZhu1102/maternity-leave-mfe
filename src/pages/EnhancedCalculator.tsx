@@ -115,7 +115,9 @@ const EnhancedCalculator: React.FC = () => {
   // 获取选中城市的政策
   useEffect(() => {
     if (state.cityCode) {
-      fetchPolicyByCity(state.cityCode)
+      // 将城市代码的首字母转为大写，其他保持原样
+      const formattedCityCode = state.cityCode.charAt(0).toUpperCase() + state.cityCode.slice(1);
+      fetchPolicyByCity(formattedCityCode)
         .then(data => setPolicyData(data))
         .catch(err => console.error('Failed to fetch policy:', err));
     }
