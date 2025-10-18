@@ -83,6 +83,15 @@ interface CalculatorState {
   socialSecurityBase: number;
   companyBase: number;
   companyName: string;
+
+  // 规则选择
+  selectedDystociaRuleCode?: string;
+  selectedOtherExtendedRuleCode?: string;
+  selectedAbortionRuleCode?: string;
+  // 可变天数输入（当所选规则 leaveDays 为空时）
+  selectedDystociaRuleDays?: number;
+  selectedOtherExtendedRuleDays?: number;
+  selectedAbortionRuleDays?: number;
 }
 
 const EnhancedCalculator: React.FC = () => {
@@ -102,6 +111,12 @@ const EnhancedCalculator: React.FC = () => {
     socialSecurityBase: 0,
     companyBase: 0,
     companyName: 'OCBC',
+    selectedDystociaRuleCode: '',
+    selectedOtherExtendedRuleCode: '',
+    selectedAbortionRuleCode: '',
+    selectedDystociaRuleDays: undefined,
+    selectedOtherExtendedRuleDays: undefined,
+    selectedAbortionRuleDays: undefined,
   });
 
   const [result, setResult] = useState<CalculateResponse | null>(null);
@@ -161,6 +176,12 @@ const EnhancedCalculator: React.FC = () => {
 
     try {
       // 第一步：计算产假日期
+      const selectedRuleCodes = [
+        state.selectedDystociaRuleCode,
+        state.selectedAbortionRuleCode,
+        state.selectedOtherExtendedRuleCode,
+      ].filter((c): c is string => !!c && c.length > 0);
+
       const dateResponse = await calculateLeaveDates({
         staffName: state.staffName || '员工',
         childBirthdate: state.expectedDate.format('YYYYMMDD'),
@@ -175,7 +196,7 @@ const EnhancedCalculator: React.FC = () => {
         regnancyDays: 0,
         ectopicPregnancy: false,
         recommendAbortionLeaveDays: 0,
-        dystociaCodeList: state.isDifficultBirth ? ['standard'] : [],
+        dystociaCodeList: selectedRuleCodes,
       });
 
       // 第二步：如果填写了社保信息，计算生育津贴
@@ -195,7 +216,7 @@ const EnhancedCalculator: React.FC = () => {
           regnancyDays: 0,
           ectopicPregnancy: false,
           recommendAbortionLeaveDays: 0,
-          dystociaCodeList: state.isDifficultBirth ? ['standard'] : [],
+          dystociaCodeList: selectedRuleCodes,
           averageSalary: state.socialSecurityBase || 0,
           currentSalary: state.companyBase || 0,
           hitForceCompensationRule: true,
@@ -281,6 +302,9 @@ const EnhancedCalculator: React.FC = () => {
       socialSecurityBase: 0,
       companyBase: 0,
       companyName: 'OCBC',
+      selectedDystociaRuleCode: '',
+      selectedAbortionRuleCode: '',
+      selectedOtherExtendedRuleCode: '',
     });
     setResult(null);
     setActiveStep(0);
@@ -427,6 +451,10 @@ const EnhancedCalculator: React.FC = () => {
                             birthType: value,
                             isDifficultBirth: value === 'difficult',
                             isAbortion: value === 'abortion',
+                            // 切换类型时清空规则选择
+                            selectedDystociaRuleCode: '',
+                            selectedAbortionRuleCode: '',
+                            selectedOtherExtendedRuleCode: state.selectedOtherExtendedRuleCode,
                           });
                         }
                       }}
@@ -470,6 +498,120 @@ const EnhancedCalculator: React.FC = () => {
                       </Typography>
                     </Alert>
                   )}
+
+                  {/* 难产规则选择 */}
+                  {state.birthType === 'difficult' && policyData?.dystociaRules && policyData.dystociaRules.length > 0 && (
+                    <TextField
+                      fullWidth
+                      select
+                      label="难产规则"
+                      value={state.selectedDystociaRuleCode || ''}
+                      onChange={(e) => setState({ ...state, selectedDystociaRuleCode: e.target.value })}
+                      helperText="请选择适用的难产规则"
+                    >
+                      {policyData.dystociaRules.map((rule) => (
+                        <MenuItem key={rule.ruleCode} value={rule.ruleCode}>
+                          {rule.description}{rule.leaveDays ? `（${rule.leaveDays}天）` : ''}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+
+                  {/* 难产规则自定义天数输入 */}
+                  {state.birthType === 'difficult' && state.selectedDystociaRuleCode && (() => {
+                    const rule = policyData?.dystociaRules?.find(r => r.ruleCode === state.selectedDystociaRuleCode);
+                    return rule && (rule.leaveDays === null || rule.leaveDays === undefined) ? (
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label={`难产规则天数（${rule.minLeaveDays ?? 0} - ${rule.maxLeaveDays ?? ''}）`}
+                        value={state.selectedDystociaRuleDays ?? ''}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value);
+                          if (!isNaN(v)) setState({ ...state, selectedDystociaRuleDays: v });
+                          else setState({ ...state, selectedDystociaRuleDays: undefined });
+                        }}
+                        inputProps={{ min: rule.minLeaveDays ?? 0, max: rule.maxLeaveDays ?? undefined }}
+                        helperText={rule.description}
+                      />
+                    ) : null;
+                  })()}
+
+                  {/* 流产规则选择 */}
+                  {state.birthType === 'abortion' && policyData?.abortionRules && policyData.abortionRules.length > 0 && (
+                    <TextField
+                      fullWidth
+                      select
+                      label="流产规则"
+                      value={state.selectedAbortionRuleCode || ''}
+                      onChange={(e) => setState({ ...state, selectedAbortionRuleCode: e.target.value })}
+                      helperText="请选择适用的流产规则"
+                    >
+                      {policyData.abortionRules.map((rule) => (
+                        <MenuItem key={rule.ruleCode} value={rule.ruleCode}>
+                          {rule.description}{rule.leaveDays ? `（${rule.leaveDays}天）` : ''}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+
+                  {/* 流产规则自定义天数输入 */}
+                  {state.birthType === 'abortion' && state.selectedAbortionRuleCode && (() => {
+                    const rule = policyData?.abortionRules?.find(r => r.ruleCode === state.selectedAbortionRuleCode);
+                    return rule && (rule.leaveDays === null || rule.leaveDays === undefined) ? (
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label={`流产规则天数（${rule.minLeaveDays ?? 0} - ${rule.maxLeaveDays ?? ''}）`}
+                        value={state.selectedAbortionRuleDays ?? ''}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value);
+                          if (!isNaN(v)) setState({ ...state, selectedAbortionRuleDays: v });
+                          else setState({ ...state, selectedAbortionRuleDays: undefined });
+                        }}
+                        inputProps={{ min: rule.minLeaveDays ?? 0, max: rule.maxLeaveDays ?? undefined }}
+                        helperText={rule.description}
+                      />
+                    ) : null;
+                  })()}
+
+                  {/* 其他延长规则选择 */}
+                  {policyData?.otherExtendedRules && policyData.otherExtendedRules.length > 0 && (
+                    <TextField
+                      fullWidth
+                      select
+                      label="其他延长规则"
+                      value={state.selectedOtherExtendedRuleCode || ''}
+                      onChange={(e) => setState({ ...state, selectedOtherExtendedRuleCode: e.target.value })}
+                      helperText="如有适用的其他延长规则，请选择"
+                    >
+                      {policyData.otherExtendedRules.map((rule) => (
+                        <MenuItem key={rule.ruleCode} value={rule.ruleCode}>
+                          {rule.description}{rule.leaveDays ? `（${rule.leaveDays}天）` : ''}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+
+                  {/* 其他延长规则自定义天数输入 */}
+                  {state.selectedOtherExtendedRuleCode && (() => {
+                    const rule = policyData?.otherExtendedRules?.find(r => r.ruleCode === state.selectedOtherExtendedRuleCode);
+                    return rule && (rule.leaveDays === null || rule.leaveDays === undefined) ? (
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label={`其他延长天数（${rule.minLeaveDays ?? 0} - ${rule.maxLeaveDays ?? ''}）`}
+                        value={state.selectedOtherExtendedRuleDays ?? ''}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value);
+                          if (!isNaN(v)) setState({ ...state, selectedOtherExtendedRuleDays: v });
+                          else setState({ ...state, selectedOtherExtendedRuleDays: undefined });
+                        }}
+                        inputProps={{ min: rule.minLeaveDays ?? 0, max: rule.maxLeaveDays ?? undefined }}
+                        helperText={rule.description}
+                      />
+                    ) : null;
+                  })()}
 
                   {/* 流产详情 */}
                   {state.isAbortion && (

@@ -38,6 +38,20 @@ export interface OtherExtendedPolicy {
   calendarDay: boolean;
 }
 
+// 规则项（来自后端返回）
+export interface PolicyRuleItem {
+  /** 规则命中时假期天数, 如为可变值则此值可能为空 */
+  leaveDays?: number | null;
+  /** 规则代码，唯一标识（UUID） */
+  ruleCode: string;
+  /** 规则描述 */
+  description: string;
+  /** 可变天数的最小值 */
+  minLeaveDays?: number | null;
+  /** 可变天数的最大值 */
+  maxLeaveDays?: number | null;
+}
+
 export interface PaternityLeavePolicy {
   leaveDays: number;
   description?: string;
@@ -62,6 +76,12 @@ export interface PolicyData {
   otherExtendedPolicy?: OtherExtendedPolicy;
   paternityLeavePolicy?: PaternityLeavePolicy;
   allowancePolicy?: AllowancePolicy;
+  /** 难产规则集合 */
+  dystociaRules?: PolicyRuleItem[];
+  /** 其他延长规则集合 */
+  otherExtendedRules?: PolicyRuleItem[];
+  /** 流产规则集合 */
+  abortionRules?: PolicyRuleItem[];
   maxLeaveDays: number;
   effectiveDate: string; // YYYY-MM-DD
   expirationDate?: string; // YYYY-MM-DD
