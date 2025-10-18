@@ -6,9 +6,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ThemeSwitcher } from '../common/ThemeSwitcher';
+import { NotificationBell } from '../notifications/NotificationBell';
 import {
   Bars3Icon,
-  BellIcon,
   Cog6ToothIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
@@ -21,7 +21,6 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // 点击外部关闭用户菜单
@@ -41,16 +40,6 @@ export function Header({ onMenuClick }: HeaderProps) {
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
-  };
-
-  const handleNotificationClick = () => {
-    // 这里可以添加通知功能的逻辑
-    console.log('通知按钮被点击');
-    // 可以打开通知面板或跳转到通知页面
-    // 暂时减少通知数量作为演示
-    if (notificationCount > 0) {
-      setNotificationCount(prev => Math.max(0, prev - 1));
-    }
   };
 
   return (
@@ -80,28 +69,8 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          {/* 通知按钮 */}
-          <button
-            type="button"
-            className="theme-button-ghost -m-2.5 p-2.5 relative"
-            onClick={handleNotificationClick}
-            title="查看通知"
-          >
-            <span className="sr-only">查看通知</span>
-            <BellIcon className="h-6 w-6" aria-hidden="true" />
-            {/* 通知徽章 */}
-            {notificationCount > 0 && (
-              <span 
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full text-xs font-bold flex items-center justify-center"
-                style={{ 
-                  backgroundColor: 'var(--color-error)', 
-                  color: 'var(--color-text-inverse)' 
-                }}
-              >
-                {notificationCount}
-              </span>
-            )}
-          </button>
+          {/* 通知铃铛 */}
+          <NotificationBell />
 
           {/* 主题切换器 */}
           <ThemeSwitcher />
