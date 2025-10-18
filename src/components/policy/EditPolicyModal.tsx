@@ -12,7 +12,8 @@ interface EditPolicyModalProps {
   onSuccess?: () => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API配置 - 使用相对路径，通过Vite代理访问
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ 
   open, 
@@ -125,7 +126,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
       };
 
       // Call the API to update the policy
-      await axios.put('http://localhost:8080/api/v1/policy/update', payload);
+      await axios.put(`${API_BASE_URL}/api/v1/policy/update`, payload);
       
       enqueueSnackbar('政策更新成功', { variant: 'success' });
       

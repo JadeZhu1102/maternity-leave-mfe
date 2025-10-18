@@ -45,9 +45,9 @@ const CalendarManagement: React.FC = () => {
   const [editedCalendar, setEditedCalendar] = useState<Calendar | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   
-  // API配置
+  // API配置 - 使用相对路径，通过Vite代理访问
   const [calendarCode, setCalendarCode] = useState<string>('CN');
-  const [apiUrl, setApiUrl] = useState<string>('http://localhost:8080');
+  const [apiUrl, setApiUrl] = useState<string>(''); // 空字符串表示使用相对路径
   const [showApiConfig, setShowApiConfig] = useState<boolean>(false);
 
   // Fetch calendar data and special dates
@@ -321,7 +321,7 @@ const CalendarManagement: React.FC = () => {
                 onChange={(e) => setApiUrl(e.target.value)}
                 size="small"
                 sx={{ flex: 1 }}
-                helperText="默认: http://localhost:8080"
+                helperText="留空使用相对路径（推荐）"
               />
               <TextField
                 label="日历代码"

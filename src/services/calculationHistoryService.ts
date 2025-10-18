@@ -3,8 +3,8 @@
  * Calculation History API Service
  */
 
-// API配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API配置 - 使用相对路径，通过Vite代理访问
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // 假期详情接口
 export interface LeaveDetail {

@@ -60,7 +60,8 @@ export interface PolicyData {
   lastUpdated: string; // ISO date string
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API配置 - 使用相对路径，通过Vite代理访问
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const USE_MOCK = false; // 设置为true使用mock数据，false使用真实API
 
 /**

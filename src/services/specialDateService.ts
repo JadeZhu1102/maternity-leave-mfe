@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { SpecialDate } from '../types/calendar';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API配置 - 使用相对路径，通过Vite代理访问
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // Mock data for 2024 (based on the provided example)
 const mock2024SpecialDates: SpecialDate[] = [

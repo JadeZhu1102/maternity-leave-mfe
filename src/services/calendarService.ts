@@ -1,8 +1,8 @@
 import { Calendar, CalendarFilter } from '../types/calendar';
 import { generateYearMonths } from './__mocks__/calendarMockData';
 
-// API配置
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API配置 - 使用相对路径，通过Vite代理访问
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // 日历设置请求接口
 interface CalendarSetupRequest {
