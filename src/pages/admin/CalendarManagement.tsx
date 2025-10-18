@@ -44,6 +44,11 @@ const CalendarManagement: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editedCalendar, setEditedCalendar] = useState<Calendar | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  
+  // API配置
+  const [calendarCode, setCalendarCode] = useState<string>('CN');
+  const [apiUrl, setApiUrl] = useState<string>('http://localhost:8080');
+  const [showApiConfig, setShowApiConfig] = useState<boolean>(false);
 
   // Fetch calendar data and special dates
   useEffect(() => {
@@ -154,24 +159,24 @@ const CalendarManagement: React.FC = () => {
 
     try {
       setLoading(true);
+      setError(null);
       
-      // TODO: Call batch save API
-      // const savedCalendar = await calendarApi.batchUpdateCalendar(editedCalendar);
+      // 调用真实API保存日历
+      const response = await calendarApi.batchUpdateCalendar(editedCalendar, calendarCode, apiUrl);
       
-      // Mock: 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Saving calendar:', editedCalendar);
+      console.log('Calendar saved successfully:', response);
       
       setCalendar(editedCalendar);
       setIsEditMode(false);
       setHasUnsavedChanges(false);
-      setError(null);
       
       // 显示成功消息
-      alert('日历保存成功！');
-    } catch (err) {
-      setError('保存日历失败');
+      alert(`日历保存成功！\n节假日: ${response.publicHolidays.length}个\n调班日: ${response.extraWorkdays.length}个`);
+    } catch (err: any) {
+      const errorMessage = err.message || '保存日历失败';
+      setError(errorMessage);
       console.error('Error saving calendar:', err);
+      alert(`保存失败：${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -246,6 +251,14 @@ const CalendarManagement: React.FC = () => {
             )}
           </Box>
           <Box display="flex" gap={2} alignItems="center">
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setShowApiConfig(!showApiConfig)}
+            >
+              {showApiConfig ? '隐藏' : '显示'}API配置
+            </Button>
+            
             <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
               <InputLabel>选择年份</InputLabel>
               <Select
@@ -294,6 +307,38 @@ const CalendarManagement: React.FC = () => {
             )}
           </Box>
         </Box>
+
+        {/* API配置面板 */}
+        {showApiConfig && (
+          <Paper sx={{ p: 3, mb: 3, bgcolor: 'info.lighter' }}>
+            <Typography variant="h6" gutterBottom>
+              API配置
+            </Typography>
+            <Box display="flex" gap={2} alignItems="center">
+              <TextField
+                label="API地址"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                size="small"
+                sx={{ flex: 1 }}
+                helperText="默认: http://localhost:8080"
+              />
+              <TextField
+                label="日历代码"
+                value={calendarCode}
+                onChange={(e) => setCalendarCode(e.target.value)}
+                size="small"
+                sx={{ width: 150 }}
+                helperText="默认: CN"
+              />
+            </Box>
+            <Alert severity="info" sx={{ mt: 2 }}>
+              保存时将调用: <strong>{apiUrl}/v1/calendar/setup-calendar</strong>
+              <br />
+              日历代码: <strong>{calendarCode}</strong>
+            </Alert>
+          </Paper>
+        )}
 
         {(isEditMode ? editedCalendar : calendar) ? (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>

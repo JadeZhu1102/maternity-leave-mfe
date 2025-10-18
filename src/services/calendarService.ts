@@ -1,6 +1,35 @@
 import { Calendar, CalendarFilter } from '../types/calendar';
 import { generateYearMonths } from './__mocks__/calendarMockData';
 
+// API配置
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+// 日历设置请求接口
+interface CalendarSetupRequest {
+  calendarCode: string;
+  publicHolidays: Array<{
+    calendarDate: string;
+    description: string;
+  }>;
+  extraWorkdays: Array<{
+    calendarDate: string;
+    description: string;
+  }>;
+}
+
+// 日历设置响应接口
+interface CalendarSetupResponse {
+  calendarCode: string;
+  publicHolidays: Array<{
+    calendarDate: string;
+    description: string;
+  }>;
+  extraWorkdays: Array<{
+    calendarDate: string;
+    description: string;
+  }>;
+}
+
 // 生成2025年日历数据
 const generate2025Calendar = (): Calendar => {
   return {
@@ -47,23 +76,77 @@ const calendarApi = {
   },
 
   /**
-   * 批量更新整年日历
-   * TODO: 实现真实的API调用
+   * 批量更新整年日历 - 调用真实API
+   * @param calendar 日历数据
+   * @param calendarCode 日历代码（默认CN）
+   * @param apiBaseUrl 自定义API地址（可选）
    */
-  async batchUpdateCalendar(calendar: Calendar): Promise<Calendar> {
-    // Mock implementation
-    console.log('[Mock] Batch updating calendar:', calendar);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // TODO: 当后端API可用时，替换为真实的API调用
-    // const response = await fetch(`/api/v1/calendar/${calendar.id}/batch-update`, {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(calendar),
-    // });
-    // return response.json();
-    
-    return calendar;
+  async batchUpdateCalendar(
+    calendar: Calendar, 
+    calendarCode: string = 'CN',
+    apiBaseUrl?: string
+  ): Promise<CalendarSetupResponse> {
+    try {
+      const baseUrl = apiBaseUrl || API_BASE_URL;
+      
+      // 将Calendar数据转换为API所需的格式
+      const publicHolidays: Array<{ calendarDate: string; description: string }> = [];
+      const extraWorkdays: Array<{ calendarDate: string; description: string }> = [];
+
+      // 遍历所有月份的所有日期
+      calendar.months.forEach(month => {
+        month.days.forEach(day => {
+          // 节假日：isWorkday === false
+          if (day.isWorkday === false && day.description) {
+            publicHolidays.push({
+              calendarDate: day.date,
+              description: day.description
+            });
+          }
+          // 调班日：周末但isWorkday === true
+          else if (day.isWorkday === true && day.description) {
+            const dayOfWeek = new Date(day.date).getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+              extraWorkdays.push({
+                calendarDate: day.date,
+                description: day.description
+              });
+            }
+          }
+        });
+      });
+
+      const requestBody: CalendarSetupRequest = {
+        calendarCode,
+        publicHolidays,
+        extraWorkdays
+      };
+
+      const apiUrl = `${baseUrl}/v1/calendar/setup-calendar`;
+      console.log('[API] Saving calendar to:', apiUrl);
+      console.log('[API] Request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API请求失败: ${response.status} ${response.statusText}\n${errorText}`);
+      }
+
+      const result: CalendarSetupResponse = await response.json();
+      console.log('[API] Response:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('[API] Error saving calendar:', error);
+      throw error;
+    }
   },
 
   // 以下方法不再支持，保留接口兼容性
