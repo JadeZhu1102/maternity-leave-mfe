@@ -30,6 +30,8 @@ import {
   Stack,
   IconButton,
   Tooltip,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import {
   CalendarMonth as CalendarIcon,
@@ -42,6 +44,7 @@ import {
   Info as InfoIcon,
   CheckCircle as CheckIcon,
   Warning as WarningIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -51,6 +54,7 @@ import 'dayjs/locale/zh-cn';
 import { SUPPORTED_CITIES } from '../constants/supportedCities';
 import { fetchPolicyByCity, type PolicyData } from '../services/policyService';
 import { calculateLeaveDates, calculateAllowance, type CalculateResponse } from '../services/maternityLeaveService';
+import calculationHistoryService, { type SaveCalculationRequest } from '../services/calculationHistoryService';
 
 dayjs.locale('zh-cn');
 
@@ -99,7 +103,9 @@ const EnhancedCalculator: React.FC = () => {
   const [result, setResult] = useState<CalculateResponse | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [policyData, setPolicyData] = useState<PolicyData | null>(null);
 
   const steps = ['基本信息', '生育情况', '社保信息', '计算结果'];
@@ -202,6 +208,56 @@ const EnhancedCalculator: React.FC = () => {
     }
   };
 
+  // 保存计算结果
+  const handleSave = async () => {
+    if (!result) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+      setSaveSuccess(false);
+
+      const saveData: SaveCalculationRequest = {
+        staffName: state.staffName || '员工',
+        cityCode: state.cityCode,
+        leaveStartDate: result.leaveDetail.leaveStartDate,
+        leaveDetail: {
+          leaveStartDate: result.leaveDetail.leaveStartDate,
+          leaveEndDate: result.leaveDetail.leaveEndDate,
+          currentLeaveDays: result.leaveDetail.currentLeaveDays,
+          abortionLeaveDays: state.isAbortion ? state.abortionWeeks * 7 : 0,
+          statutoryLeaveDays: 98,
+          dystociaLeaveDays: state.isDifficultBirth ? 15 : 0,
+          moreInfantLeaveDays: state.infantNumber > 1 ? (state.infantNumber - 1) * 15 : 0,
+          otherExtendedLeaveDays: result.leaveDetail.currentLeaveDays - 98 - (state.isDifficultBirth ? 15 : 0) - (state.infantNumber > 1 ? (state.infantNumber - 1) * 15 : 0),
+          totalLeaveDays: result.leaveDetail.currentLeaveDays,
+        },
+        allowanceDetail: {
+          allowance: result.allowanceDetail?.allowance ?? 0,
+          compensation: result.allowanceDetail?.compensation ?? 0,
+          firstMonthSalary: result.allowanceDetail?.firstMonthSalary ?? 0,
+          lastMonthSalary: result.allowanceDetail?.lastMonthSalary ?? 0,
+          otherMonthSalary: result.allowanceDetail?.otherMonthSalary ?? 0,
+          totalSalary: result.allowanceDetail?.totalSalary ?? 0,
+        },
+        calculateComments: result.calculateComments,
+        abortion: state.isAbortion,
+      };
+
+      const savedResult = await calculationHistoryService.saveCalculateHistory(saveData);
+      setSaveSuccess(true);
+      console.log('保存成功，记录ID:', savedResult.id);
+      
+      // 3秒后自动隐藏成功提示
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+      console.error('Save error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleReset = () => {
     setState({
       staffName: '',
@@ -221,6 +277,7 @@ const EnhancedCalculator: React.FC = () => {
     });
     setResult(null);
     setActiveStep(0);
+    setSaveSuccess(false);
   };
 
   return (
@@ -680,6 +737,25 @@ const EnhancedCalculator: React.FC = () => {
                       </>
                     )}
                   </Stack>
+
+                  {/* 保存按钮 */}
+                  <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                    {saveSuccess && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        保存成功！已添加到历史记录
+                      </Alert>
+                    )}
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="primary"
+                      onClick={handleSave}
+                      disabled={saving}
+                      startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                    >
+                      {saving ? '保存中...' : '保存到历史记录'}
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             )}

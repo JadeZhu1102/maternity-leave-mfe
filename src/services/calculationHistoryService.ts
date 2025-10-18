@@ -56,10 +56,52 @@ export interface HistoryQueryParams {
   pageSize?: number;
 }
 
+// 保存历史记录请求接口
+export interface SaveCalculationRequest {
+  staffName: string;
+  cityCode: string;
+  leaveStartDate: string;
+  leaveDetail: LeaveDetail;
+  allowanceDetail: AllowanceDetail;
+  calculateComments: CalculateComments;
+  abortion?: boolean;
+}
+
 /**
  * 计算历史服务
  */
 const calculationHistoryService = {
+  /**
+   * 保存计算历史记录
+   */
+  async saveCalculateHistory(data: SaveCalculationRequest): Promise<CalculationHistoryRecord> {
+    try {
+      const url = `${API_BASE_URL}/api/v1/maternity-leave/saveCalculateHistory`;
+      console.log('[API] Saving calculation history to:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API请求失败: ${response.status} ${response.statusText}\n${errorText}`);
+      }
+
+      const result: CalculationHistoryRecord = await response.json();
+      console.log('[API] Save response:', result);
+
+      return result;
+    } catch (error) {
+      console.error('[API] Error saving calculation history:', error);
+      throw error;
+    }
+  },
+
   /**
    * 获取所有计算历史记录
    */
