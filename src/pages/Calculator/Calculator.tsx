@@ -38,7 +38,7 @@ export const Calculator: React.FC = () => {
 
   // 获取城市政策
   const fetchCityPolicy = async (cityName: string) => {
-    const city = getCityByName(cityName);
+    const city = getCityByCode(cityName);
     if (!city) {
       setPolicyData(null);
       setPolicyError('不支持该城市的产假政策');

@@ -135,8 +135,9 @@ export function PolicyManagement() {
     setShowCreateModal(false);
   };
 
+  const normalizedTerm = (searchTerm ?? '').toLowerCase();
   const filteredPolicies = policies.filter(policy =>
-    policy.cityName.toLowerCase().includes(searchTerm.toLowerCase())
+    (policy.cityName ?? '').toLowerCase().includes(normalizedTerm)
   );
 
   return (
