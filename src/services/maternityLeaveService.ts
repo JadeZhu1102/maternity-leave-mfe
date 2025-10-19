@@ -10,7 +10,7 @@ export interface DateCalculateRequest {
   deliverySequence: number;
   abortion: boolean;
   dystocia: boolean;
-  cityName: string;
+  cityCode: string;
   companyName: string;
   leaveStartDate: string; // yyyy-MM-dd
   calendarCode: string;

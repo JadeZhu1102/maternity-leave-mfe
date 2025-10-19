@@ -10,11 +10,13 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { cn } from '../../utils/cn';
 import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import EditPolicyModal from '../../components/policy/EditPolicyModal';
-import { getAllPolicies, type PolicyData } from '../../services/policyService';
+import { getAllPolicies, deletePolicy, type PolicyData } from '../../services/policyService';
 
 // Define the CityPolicy interface
 interface CityPolicy {
   id: string;
+  numericId: number; // 添加数字ID字段
+  cityCode: string;
   cityName: string;
   statutoryPolicy: {
     leaveDays: number;
@@ -51,7 +53,7 @@ export function PolicyManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<CityPolicy | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [policyToDelete, setPolicyToDelete] = useState<string | null>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -64,14 +66,18 @@ export function PolicyManagement() {
       // 调用真实API获取所有政策
       const apiPolicies = await getAllPolicies();
       
-      // 将API数据转换为组件需要的格式
+      // 将API数据转换为组件需要的格式，并添加数字ID
       const formattedPolicies: CityPolicy[] = apiPolicies.map((policy, index) => ({
-        id: String(index + 1),
+        // 使用索引+1作为临时ID，实际应该使用后端返回的ID
+        id: `temp_${index + 1}`,
+        numericId: index + 1, // 添加数字ID用于删除操作
+        cityCode: policy.cityCode,
         cityName: policy.cityName,
         statutoryPolicy: {
           leaveDays: policy.statutoryPolicy.leaveDays,
           delayForPublicHoliday: policy.statutoryPolicy.delayForPublicHoliday,
           calendarDay: policy.statutoryPolicy.calendarDay,
+          bonusLeaveDays: 0, // 添加默认值
         },
         dystociaPolicy: {
           standardLeaveDays: policy.dystociaPolicy.standardLeaveDays,
@@ -83,10 +89,14 @@ export function PolicyManagement() {
           delayForPublicHoliday: policy.moreInfantPolicy.delayForPublicHoliday,
           calendarDay: policy.moreInfantPolicy.calendarDay
         },
-        otherExtendedPolicy: {
-          standardLeaveDays: policy.otherExtendedPolicy.standardLeaveDays,
-          delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday,
-          calendarDay: policy.otherExtendedPolicy.calendarDay
+otherExtendedPolicy: policy.otherExtendedPolicy ? {
+          standardLeaveDays: policy.otherExtendedPolicy.standardLeaveDays || 0,
+          delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday || false,
+          calendarDay: policy.otherExtendedPolicy.calendarDay || false
+        } : {
+          standardLeaveDays: 0,
+          delayForPublicHoliday: false,
+          calendarDay: false
         },
         maxLeaveDays: policy.maxLeaveDays,
         isActive: true,
@@ -111,29 +121,38 @@ export function PolicyManagement() {
     setEditingPolicy(policy);
   };
 
-  const handleDeleteClick = (policyId: string) => {
+  const handleDeleteClick = (policyId: number) => {
+    console.log('Setting policyToDelete:', policyId);
     setPolicyToDelete(policyId);
     setShowDeleteDialog(true);
   };
 
   const handleDeletePolicy = async () => {
-    if (!policyToDelete) return;
+    console.log('handleDeletePolicy called with policyToDelete:', policyToDelete);
+    if (!policyToDelete) {
+      console.error('No policy ID to delete');
+      return;
+    }
     
     try {
-      // TODO: 调用真实API删除政策
-      // await deletePolicyAPI(policyToDelete);
+      setIsSubmitting(true);
+      console.log('Calling deletePolicy with ID:', policyToDelete);
       
-      // 暂时使用本地删除，等待后端删除API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 调用删除API - 使用城市代码作为参数
+      await deletePolicy(policyToDelete);
       
-      setPolicies(prev => prev.filter(policy => policy.id !== policyToDelete));
+      // 更新本地状态，使用numericId进行过滤
+      console.log('Updating local state, removing policy with ID:', policyToDelete);
+      setPolicies(prev => prev.filter(policy => policy.numericId !== policyToDelete));
       
       setPolicyToDelete(null);
       console.log('政策删除成功');
     } catch (error) {
       console.error('删除政策失败:', error);
-      console.error('删除政策失败，请重试');
+      // 这里可以添加错误提示，比如使用toast或alert
+      alert('删除政策失败，请重试');
     } finally {
+      setIsSubmitting(false);
       setShowDeleteDialog(false);
     }
   };
@@ -215,7 +234,10 @@ export function PolicyManagement() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    城市
+                    城市代码
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    城市名称
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     法定产假
@@ -245,8 +267,12 @@ export function PolicyManagement() {
                   <tr key={policy.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900">{policy.cityName}</span>
-                        {/* <span className="text-xs text-gray-500">生效日: {policy.effectiveDate}</span> */}
+                        <span className="text-sm font-medium text-gray-900">{policy.cityCode}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{policy.cityName}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -309,9 +335,11 @@ export function PolicyManagement() {
                         <PencilIcon className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteClick(policy.id)}
+                        type="button"
+                        onClick={() => policy.numericId && handleDeleteClick(policy.numericId)}
                         className="text-red-600 hover:text-red-900"
                         title="删除政策"
+                        disabled={isSubmitting}
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>

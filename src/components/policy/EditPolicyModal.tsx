@@ -126,7 +126,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
       };
 
       // Call the API to update the policy
-      await axios.put(`${API_BASE_URL}/api/v1/policy/update`, payload);
+      await axios.post(`${API_BASE_URL}/api/v1/policy/update`, payload);
       
       enqueueSnackbar('政策更新成功', { variant: 'success' });
       
