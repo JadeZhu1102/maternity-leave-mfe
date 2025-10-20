@@ -22,58 +22,52 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
   onSuccess 
 }) => {
   const [loading, setLoading] = useState(false);
-  const [initialValues, setInitialValues] = useState<any>(null);
+  const [initialData, setInitialData] = useState<Partial<CreatePolicyPayload> | null>(null);
   const { enqueueSnackbar } = useSnackbar();
   
-  // Format the policy data to match the form's initial values
+  // Map API policy data to PolicyForm initialData without injecting defaults
   useEffect(() => {
     if (policy) {
-      const formattedPolicy = {
-        ...policy,
-        // Map basic fields
-        cityName: policy.cityName || '',
-        effectiveDate: policy.effectiveDate?.split('T')[0] || '',
-        expiryDate: policy.expiryDate?.split('T')[0] || '',
-        
-        // Map statutory policy
+      const formatted: Partial<CreatePolicyPayload> = {
+        // Basic
+        cityName: policy.cityName,
+        // Statutory: map API top-level maxLeaveDays into form field path
         statutoryPolicy: {
-          ...policy.statutoryPolicy,
-          leaveDays: policy.statutoryPolicy?.leaveDays || 0,
-          maxLeaveDays: policy.statutoryPolicy?.maxLeaveDays || 0,
-          calendarDay: policy.statutoryPolicy?.calendarDay ?? true, // Default to 日历日
-          delayForPublicHoliday: policy.statutoryPolicy?.delayForPublicHoliday ?? false,
-          bonusLeaveDays: policy.statutoryPolicy?.bonusLeaveDays || 0,
-        },
-        
-        // Map dystocia policy
+          leaveDays: policy.statutoryPolicy?.leaveDays,
+          calendarDay: policy.statutoryPolicy?.calendarDay,
+          delayForPublicHoliday: policy.statutoryPolicy?.delayForPublicHoliday,
+          // The form binds maxLeaveDays under statutoryPolicy
+          // Use API's maxLeaveDays without defaulting
+          // @ts-ignore - PolicyForm expects this field in defaultValues; we supply it to override defaults
+          maxLeaveDays: policy.maxLeaveDays,
+        } as any,
+        // Dystocia
         dystociaPolicy: {
-          ...policy.dystociaPolicy,
-          standardLeaveDays: policy.dystociaPolicy?.standardLeaveDays || 0,
-          calendarDay: policy.dystociaPolicy?.calendarDay ?? true,
-          delayForPublicHoliday: policy.dystociaPolicy?.delayForPublicHoliday ?? false,
+          standardLeaveDays: policy.dystociaPolicy?.standardLeaveDays,
+          calendarDay: policy.dystociaPolicy?.calendarDay,
+          delayForPublicHoliday: policy.dystociaPolicy?.delayForPublicHoliday,
         },
-        
-        // Map more infant policy
+        // More infant: map extraInfantLeaveDays -> leaveDays for the form
         moreInfantPolicy: {
-          ...policy.moreInfantPolicy,
-          leaveDays: policy.moreInfantPolicy?.leaveDays || 0,
-          calendarDay: policy.moreInfantPolicy?.calendarDay ?? true,
-          delayForPublicHoliday: policy.moreInfantPolicy?.delayForPublicHoliday ?? false,
-        },
-        
-        // Map allowance policy (if it exists, otherwise use defaults)
-        allowancePolicy: policy.allowancePolicy || {
-          statutory: { govAllowance: 0, allowanceDaysRule: '' },
-          dystocia: { govAllowance: 0, allowanceDaysRule: '' },
-          moreInfant: { govAllowance: 0, allowanceDaysRule: '' },
-          bonusLeave: { govAllowance: 0, allowanceDaysRule: '' },
-        },
-        
-        // Map bonus leave policies (if any)
-        bonusLeavePolicies: policy.bonusLeavePolicies || [],
+          leaveDays: policy.moreInfantPolicy?.extraInfantLeaveDays as any,
+          calendarDay: policy.moreInfantPolicy?.calendarDay,
+          delayForPublicHoliday: policy.moreInfantPolicy?.delayForPublicHoliday,
+        } as any,
+        // Other extended: map standardLeaveDays -> leaveDays for the form
+        otherExtendedPolicy: policy.otherExtendedPolicy
+          ? {
+              leaveDays: (policy.otherExtendedPolicy.standardLeaveDays as any),
+              calendarDay: policy.otherExtendedPolicy.calendarDay,
+              delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday,
+            } as any
+          : { leaveDays: undefined as any },
+        // Abortion: if API没有规则，提供空数组以覆盖默认规则
+        abortionPolicy: { abortionRules: [] } as any,
+        // Allowance: 覆盖默认公司薪资列表避免出现默认项
+        allowancePolicy: { corpSalaryDetailList: [] } as any,
       };
-      
-      setInitialValues(formattedPolicy);
+
+      setInitialData(formatted);
     }
   }, [policy]);
 
@@ -157,17 +151,14 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
     >
       <DialogTitle id="edit-policy-dialog-title">编辑政策</DialogTitle>
       <DialogContent dividers>
-        {initialValues ? (
-          <PolicyForm 
-            key={policy?.id} // Force re-render when policy changes
-            onSubmit={handleSubmit} 
-            initialValues={initialValues}
-            isEditMode={true}
+        {initialData ? (
+          <PolicyForm
+            key={policy?.id}
+            onSubmit={handleSubmit}
+            initialData={initialData}
           />
         ) : (
-          <Box py={4} textAlign="center">
-            加载中...
-          </Box>
+          <Box py={4} textAlign="center">加载中...</Box>
         )}
       </DialogContent>
       <DialogActions>

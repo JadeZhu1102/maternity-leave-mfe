@@ -877,21 +877,28 @@ const EnhancedCalculator: React.FC = () => {
                       </Typography>
                     </Box>
 
-                    <Box>
-                      <Typography variant="subtitle2" color="primary" gutterBottom>
-                        延长产假
-                      </Typography>
-                      <Typography variant="body2">
-                        {policyData.statutoryPolicy.maxLeaveDays - policyData.statutoryPolicy.leaveDays}天（地方规定）
-                      </Typography>
-                    </Box>
+                    {(() => {
+                      const extendedDays = (Number.isFinite(policyData?.maxLeaveDays)
+                        ? (policyData.maxLeaveDays - policyData.statutoryPolicy.leaveDays)
+                        : (policyData.otherExtendedPolicy?.standardLeaveDays ?? 0)) as number;
+                      return Number.isFinite(extendedDays) && extendedDays > 0 ? (
+                        <Box>
+                          <Typography variant="subtitle2" color="primary" gutterBottom>
+                            延长产假
+                          </Typography>
+                          <Typography variant="body2">
+                            {extendedDays}天（地方规定）
+                          </Typography>
+                        </Box>
+                      ) : null;
+                    })()}
 
                     <Box>
                       <Typography variant="subtitle2" color="primary" gutterBottom>
                         总产假天数
                       </Typography>
                       <Typography variant="h5" color="success.main" fontWeight={600}>
-                        {policyData.statutoryPolicy.maxLeaveDays}天
+                        {policyData.maxLeaveDays}天
                       </Typography>
                     </Box>
 

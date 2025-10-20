@@ -44,6 +44,8 @@ interface CityPolicy {
   effectiveDate: string;
   createdAt: string;
   updatedAt: string;
+  // 保存原始API返回，供编辑弹框使用
+  originalPolicy: PolicyData;
 }
 
 export function PolicyManagement() {
@@ -102,7 +104,8 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
         isActive: true,
         effectiveDate: policy.effectiveDate,
         createdAt: policy.lastUpdated,
-        updatedAt: policy.lastUpdated
+        updatedAt: policy.lastUpdated,
+        originalPolicy: policy
       }));
 
       setPolicies(formattedPolicies);
@@ -364,7 +367,7 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
         <EditPolicyModal
           open={!!editingPolicy}
           onClose={() => setEditingPolicy(null)}
-          policy={editingPolicy}
+          policy={editingPolicy?.originalPolicy || editingPolicy}
           onSuccess={handlePolicyCreated}
         />
       )}

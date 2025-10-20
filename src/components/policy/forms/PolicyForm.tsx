@@ -39,7 +39,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
   // loading state is managed by the parent component
 }) => {
   // Memoize default values to prevent recreation on every render
-  const defaultValues = useMemo<CreatePolicyPayload>(() => ({
+  const defaultsWhenCreate = useMemo<CreatePolicyPayload>(() => ({
     cityName: '',
     statutoryPolicy: {
       leaveDays: 98,
@@ -93,8 +93,16 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
       govAllowance: 0,
     },
     bonusLeavePolicies: [],
-    ...initialData,
-  }), [initialData]);
+  }), []);
+
+  const defaultValues = useMemo<CreatePolicyPayload>(() => {
+    // 如果提供了初始数据（编辑模式），完全使用它，避免填充默认/空数据
+    if (initialData && Object.keys(initialData).length > 0) {
+      return initialData as CreatePolicyPayload;
+    }
+    // 创建模式：使用默认模板
+    return defaultsWhenCreate;
+  }, [initialData, defaultsWhenCreate]);
 
   const {
     register,
@@ -273,7 +281,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   <InputLabel>计算方式</InputLabel>
                   <Select
                     {...register('statutoryPolicy.calendarDay')}
-                    defaultValue={true}
                     label="计算方式"
                   >
                     <MenuItem value="true">日历日</MenuItem>
@@ -310,7 +317,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   <InputLabel>计算方式</InputLabel>
                   <Select
                     {...register('dystociaPolicy.calendarDay')}
-                    defaultValue={true}
                     label="计算方式"
                   >
                     <MenuItem value="true">日历日</MenuItem>
