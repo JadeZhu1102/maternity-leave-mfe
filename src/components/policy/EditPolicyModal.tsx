@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from '@mui/material';
 import { PolicyForm } from './forms/PolicyForm';
-import { CreatePolicyPayload } from '../../types/policyApi';
+import { CreatePolicyPayload, UpdatePolicyPayload } from '../../types/policyApi';
 import axios from 'axios';
 import { useSnackbar } from 'notistack';
 
@@ -25,98 +25,126 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
   const [initialData, setInitialData] = useState<Partial<CreatePolicyPayload> | null>(null);
   const { enqueueSnackbar } = useSnackbar();
   
-  // Map API policy data to PolicyForm initialData without injecting defaults
+  // Map API policy data to PolicyForm initialData aligned with CreatePolicyPayload
   useEffect(() => {
     if (policy) {
       const formatted: Partial<CreatePolicyPayload> = {
-        // Basic
         cityName: policy.cityName,
-        // Statutory: map API top-level maxLeaveDays into form field path
+        cityCode: policy.cityCode,
         statutoryPolicy: {
           leaveDays: policy.statutoryPolicy?.leaveDays,
           calendarDay: policy.statutoryPolicy?.calendarDay,
           delayForPublicHoliday: policy.statutoryPolicy?.delayForPublicHoliday,
-          // The form binds maxLeaveDays under statutoryPolicy
-          // Use API's maxLeaveDays without defaulting
-          // @ts-ignore - PolicyForm expects this field in defaultValues; we supply it to override defaults
-          maxLeaveDays: policy.maxLeaveDays,
-        } as any,
-        // Dystocia
+        },
         dystociaPolicy: {
           standardLeaveDays: policy.dystociaPolicy?.standardLeaveDays,
-          calendarDay: policy.dystociaPolicy?.calendarDay,
           delayForPublicHoliday: policy.dystociaPolicy?.delayForPublicHoliday,
+          calendarDay: policy.dystociaPolicy?.calendarDay,
         },
-        // More infant: map extraInfantLeaveDays -> leaveDays for the form
         moreInfantPolicy: {
-          leaveDays: policy.moreInfantPolicy?.extraInfantLeaveDays as any,
-          calendarDay: policy.moreInfantPolicy?.calendarDay,
+          extraInfantLeaveDays: policy.moreInfantPolicy?.extraInfantLeaveDays,
           delayForPublicHoliday: policy.moreInfantPolicy?.delayForPublicHoliday,
-        } as any,
-        // Other extended: map standardLeaveDays -> leaveDays for the form
+          calendarDay: policy.moreInfantPolicy?.calendarDay,
+        },
         otherExtendedPolicy: policy.otherExtendedPolicy
           ? {
-              leaveDays: (policy.otherExtendedPolicy.standardLeaveDays as any),
-              calendarDay: policy.otherExtendedPolicy.calendarDay,
+              leaveDays: (policy.otherExtendedPolicy.leaveDays ?? policy.otherExtendedPolicy.standardLeaveDays) ?? 0,
               delayForPublicHoliday: policy.otherExtendedPolicy.delayForPublicHoliday,
-            } as any
-          : { leaveDays: undefined as any },
-        // Abortion: if API没有规则，提供空数组以覆盖默认规则
-        abortionPolicy: { abortionRules: [] } as any,
-        // Allowance: 覆盖默认公司薪资列表避免出现默认项
-        allowancePolicy: { corpSalaryDetailList: [] } as any,
+              calendarDay: policy.otherExtendedPolicy.calendarDay,
+            }
+          : undefined,
+        abortionPolicy: {
+          delayForPublicHoliday: policy.abortionPolicy?.delayForPublicHoliday ?? false,
+          calendarDay: policy.abortionPolicy?.calendarDay ?? true,
+          abortionRules: Array.isArray(policy.abortionPolicy?.abortionRules)
+            ? policy.abortionPolicy.abortionRules.map((r: any) => ({
+                ruleCode: r.ruleCode,
+                description: r.description,
+                leaveDays: r.leaveDays ?? 0,
+              }))
+            : [],
+        },
+        allowancePolicy: {
+          corpSalaryDetailList: Array.isArray(policy.allowancePolicy?.corpSalaryDetailList)
+            ? policy.allowancePolicy.corpSalaryDetailList.map((c: any) => ({
+                companyName: c.companyName,
+                corpAverageSalary: c.corpAverageSalary,
+              }))
+            : [],
+          numerator: policy.allowancePolicy?.numerator ?? 1,
+          denominator: policy.allowancePolicy?.denominator ?? 30,
+          allowanceDaysRule: Array.isArray(policy.allowancePolicy?.allowanceDaysRule)
+            ? policy.allowancePolicy.allowanceDaysRule
+            : [],
+          targetAccountType: policy.allowancePolicy?.targetAccountType ?? 'CORP',
+          differenceCompensationRule: {
+            ruleDescription: policy.allowancePolicy?.differenceCompensationRule?.ruleDescription ?? '',
+            forceCompensation: policy.allowancePolicy?.differenceCompensationRule?.forceCompensation ?? 'No',
+            otherCompensationRuleDesc: Array.isArray(policy.allowancePolicy?.differenceCompensationRule?.otherCompensationRuleDesc)
+              ? policy.allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc
+              : [],
+          },
+          govAllowance: policy.allowancePolicy?.govAllowance ?? 0,
+        },
       };
 
       setInitialData(formatted);
     }
   }, [policy]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CreatePolicyPayload) => {
     try {
       setLoading(true);
       
-      // Format the payload according to the new API requirements
-      const payload = {
-        id: policy.id,
-        cityCode: data.cityName, // Assuming cityName maps to cityCode
+      // Build UpdatePolicyPayload strictly aligned with types
+      const payload: UpdatePolicyPayload = {
+        id: Number(policy.id) || 0,
+        cityCode: data.cityCode || policy.cityCode,
         statutoryPolicy: {
-          leaveDays: Number(data.statutoryPolicy?.leaveDays) || 0,
-          delayForPublicHoliday: data.statutoryPolicy?.delayForPublicHoliday || false,
-          calendarDay: data.statutoryPolicy?.calendarDay ?? true
+          leaveDays: Number(data.statutoryPolicy.leaveDays) || 0,
+          delayForPublicHoliday: !!data.statutoryPolicy.delayForPublicHoliday,
+          calendarDay: !!data.statutoryPolicy.calendarDay,
         },
         dystociaPolicy: {
-          standardLeaveDays: Number(data.dystociaPolicy?.standardLeaveDays) || 0,
-          delayForPublicHoliday: data.dystociaPolicy?.delayForPublicHoliday || false,
-          calendarDay: data.dystociaPolicy?.calendarDay ?? true
+          standardLeaveDays: Number(data.dystociaPolicy.standardLeaveDays) || 0,
+          delayForPublicHoliday: !!data.dystociaPolicy.delayForPublicHoliday,
+          calendarDay: !!data.dystociaPolicy.calendarDay,
         },
         moreInfantPolicy: {
-          extraInfantLeaveDays: Number(data.moreInfantPolicy?.leaveDays) || 0,
-          delayForPublicHoliday: data.moreInfantPolicy?.delayForPublicHoliday || false,
-          calendarDay: data.moreInfantPolicy?.calendarDay ?? true
+          extraInfantLeaveDays: Number(data.moreInfantPolicy.extraInfantLeaveDays) || 0,
+          delayForPublicHoliday: !!data.moreInfantPolicy.delayForPublicHoliday,
+          calendarDay: !!data.moreInfantPolicy.calendarDay,
         },
         otherExtendedPolicy: {
-          leaveDays: Number(data.otherExtendedPolicy?.leaveDays) || 0,
-          delayForPublicHoliday: data.otherExtendedPolicy?.delayForPublicHoliday || false,
-          calendarDay: data.otherExtendedPolicy?.calendarDay ?? true
+          leaveDays: Number(data.otherExtendedPolicy.leaveDays) || 0,
+          delayForPublicHoliday: !!data.otherExtendedPolicy.delayForPublicHoliday,
+          calendarDay: !!data.otherExtendedPolicy.calendarDay,
         },
         abortionPolicy: {
-          delayForPublicHoliday: data.abortionPolicy?.delayForPublicHoliday || false,
-          calendarDay: data.abortionPolicy?.calendarDay ?? true,
-          abortionRules: data.abortionPolicy?.abortionRules || []
+          delayForPublicHoliday: !!data.abortionPolicy.delayForPublicHoliday,
+          calendarDay: !!data.abortionPolicy.calendarDay,
+          abortionRules: (data.abortionPolicy.abortionRules || []).map(r => ({
+            ruleCode: r.ruleCode,
+            description: r.description,
+            leaveDays: Number(r.leaveDays) || 0,
+          })),
         },
         allowancePolicy: {
-          corpSalaryDetailList: data.allowancePolicy?.corpSalaryDetailList || [],
-          numerator: data.allowancePolicy?.numerator || 1,
-          denominator: data.allowancePolicy?.denominator || 30,
-          allowanceDaysRule: data.allowancePolicy?.allowanceDaysRule || [],
-          targetAccountType: data.allowancePolicy?.targetAccountType || 'CORP',
+          corpSalaryDetailList: (data.allowancePolicy.corpSalaryDetailList || []).map(r => ({
+            companyName: r.companyName,
+            corpAverageSalary: Number(r.corpAverageSalary) || 0,
+          })),
+          numerator: Number(data.allowancePolicy.numerator) || 1,
+          denominator: Number(data.allowancePolicy.denominator) || 30,
+          allowanceDaysRule: data.allowancePolicy.allowanceDaysRule || [],
+          targetAccountType: data.allowancePolicy.targetAccountType || 'CORP',
           differenceCompensationRule: {
-            ruleDescription: data.allowancePolicy?.differenceCompensationRule?.ruleDescription || '',
-            forceCompensation: data.allowancePolicy?.differenceCompensationRule?.forceCompensation || 'Only if',
-            otherCompensationRuleDesc: data.allowancePolicy?.differenceCompensationRule?.otherCompensationRuleDesc || []
+            ruleDescription: data.allowancePolicy.differenceCompensationRule.ruleDescription || '',
+            forceCompensation: data.allowancePolicy.differenceCompensationRule.forceCompensation || 'No',
+            otherCompensationRuleDesc: data.allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc || [],
           },
-          govAllowance: Number(data.allowancePolicy?.govAllowance) || 0
-        }
+          govAllowance: Number(data.allowancePolicy.govAllowance) || 0,
+        },
       };
 
       // Call the API to update the policy
