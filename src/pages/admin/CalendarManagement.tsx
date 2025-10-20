@@ -37,6 +37,7 @@ const CalendarManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [openMonthView, setOpenMonthView] = useState<boolean>(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(dayjs().month() + 1);
+  const [initialSelectedDate, setInitialSelectedDate] = useState<string | null>(null);
   const [newCalendarDialogOpen, setNewCalendarDialogOpen] = useState<boolean>(false);
   const [newCalendarName, setNewCalendarName] = useState<string>('');
   
@@ -131,6 +132,16 @@ const CalendarManagement: React.FC = () => {
 
   const handleMonthClick = (month: number) => {
     setSelectedMonth(month);
+    setInitialSelectedDate(null);
+    setOpenMonthView(true);
+  };
+
+  // 在主网格点击具体日期时，直接进入该月并预选中该日期（仅编辑模式）
+  const handleMainDayClick = (day: CalendarDay) => {
+    if (!isEditMode) return;
+    const month = dayjs(day.date).month() + 1;
+    setSelectedMonth(month);
+    setInitialSelectedDate(day.date);
     setOpenMonthView(true);
   };
 
@@ -372,7 +383,7 @@ const CalendarManagement: React.FC = () => {
                         year={year}
                         month={month}
                         days={displayCalendar?.months.find(m => m.month === month)?.days || []}
-                        onDayClick={(day) => console.log('Day clicked:', day)}
+                        onDayClick={handleMainDayClick}
                       />
                     </Box>
                   </Paper>
@@ -405,6 +416,7 @@ const CalendarManagement: React.FC = () => {
             days={(isEditMode ? editedCalendar : calendar)?.months.find(m => m.month === selectedMonth)?.days || []}
             onUpdateDay={handleUpdateDay}
             isEditMode={isEditMode}
+            initialSelectedDate={initialSelectedDate}
           />
         )}
 

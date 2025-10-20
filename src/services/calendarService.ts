@@ -1,4 +1,4 @@
-import { Calendar, CalendarFilter } from '../types/calendar';
+import { Calendar, CalendarFilter, GenerateDefaultCalendarPayload } from '../types/calendar';
 import { generateYearMonths } from './__mocks__/calendarMockData';
 
 // API配置 - 使用相对路径，通过Vite代理访问
@@ -30,49 +30,37 @@ interface CalendarSetupResponse {
   }>;
 }
 
-// 生成2025年日历数据
-const generate2025Calendar = (): Calendar => {
+// 生成指定年份的日历数据
+const generateCalendar = (year: number): Calendar => {
   return {
-    id: '2025',
-    name: '2025年日历',
-    year: 2025,
-    description: '2025年标准日历',
+    id: String(year),
+    name: `${year}年日历`,
+    year,
+    description: `${year}年标准日历`,
     isDefault: true,
-    months: generateYearMonths(2025),
+    months: generateYearMonths(year),
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 };
 
-// 2025年日历数据
-const calendar2025 = generate2025Calendar();
-
 const calendarApi = {
-  // 获取日历列表（仅返回2025年日历）
+  // 获取日历列表（默认返回所请求的年份或当前年份）
   async getCalendars(filter?: CalendarFilter): Promise<Calendar[]> {
-    if (filter?.year && filter.year !== 2025) {
-      return [];
-    }
-    if (filter?.isDefault !== undefined && filter.isDefault !== true) {
-      return [];
-    }
-    return [calendar2025];
+    const y = filter?.year ?? new Date().getFullYear();
+    return [generateCalendar(y)];
   },
 
-  // 根据ID获取日历（仅支持2025年日历）
+  // 根据ID获取日历（ID为年份字符串）
   async getCalendarById(id: string): Promise<Calendar> {
-    if (id === '2025') {
-      return calendar2025;
-    }
-    throw new Error('Calendar not found');
+    const y = Number.parseInt(id, 10);
+    if (!Number.isFinite(y)) throw new Error('Calendar not found');
+    return generateCalendar(y);
   },
 
-  // 获取指定年份的默认日历（仅支持2025年）
+  // 获取指定年份的默认日历（支持任意年份）
   async getDefaultCalendar(year: number): Promise<Calendar> {
-    if (year === 2025) {
-      return calendar2025;
-    }
-    throw new Error(`Only year 2025 is supported`);
+    return generateCalendar(year);
   },
 
   /**
@@ -149,9 +137,10 @@ const calendarApi = {
     }
   },
 
-  // 以下方法不再支持，保留接口兼容性
-  async generateDefaultCalendar(): Promise<Calendar> {
-    return calendar2025;
+  // 生成指定年份的默认日历
+  async generateDefaultCalendar(payload: GenerateDefaultCalendarPayload): Promise<Calendar> {
+    const { year } = payload;
+    return generateCalendar(year);
   },
 
   async updateCalendarDay(): Promise<Calendar> {

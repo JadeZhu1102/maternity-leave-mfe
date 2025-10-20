@@ -17,7 +17,8 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
 const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayClick }) => {
   // Get the first day of the month and the number of days in the month
-  const firstDayOfMonth = dayjs(`${year}-${month}-01`);
+  // Use native Date to avoid string parsing issues in dayjs without plugins
+  const firstDayOfMonth = dayjs(new Date(year, month - 1, 1));
   const daysInMonth = firstDayOfMonth.daysInMonth();
   const firstDayOfWeek = firstDayOfMonth.day();
 
@@ -112,14 +113,14 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
                   : isAdjustedWorkday 
                     ? 'warning.light'
                     : isWeekend 
-                      ? 'action.hover' 
+                      ? 'success.light' 
                       : 'background.paper',
                 color: isHoliday 
                   ? 'error.contrastText' 
                   : isAdjustedWorkday
                     ? 'warning.contrastText'
                     : isWeekend 
-                      ? 'text.secondary' 
+                      ? 'success.dark' 
                       : 'text.primary',
                 border: isToday ? '2px solid' : '1px solid',
                 borderColor: isToday ? 'primary.main' : 'divider',

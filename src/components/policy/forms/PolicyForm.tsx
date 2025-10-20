@@ -708,6 +708,43 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   helperText={errors.allowancePolicy?.denominator?.message}
                 />
               </Grid>
+              {/* 津贴天数规则（多选） */}
+              <Grid size={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  津贴天数包含假期（可多选）
+                </Typography>
+                <FormGroup row>
+                  {[
+                    { code: 'statutory', label: '法定产假' },
+                    { code: 'dystocia', label: '难产假' },
+                    { code: 'moreInfant', label: '多胎假' },
+                    { code: 'otherExtended', label: '奖励假' },
+                  ].map((opt) => {
+                    const current: string[] = getValues('allowancePolicy.allowanceDaysRule') || [];
+                    const checked = current.includes(opt.code);
+                    return (
+                      <FormControlLabel
+                        key={opt.code}
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = new Set(current);
+                              if (e.target.checked) next.add(opt.code);
+                              else next.delete(opt.code);
+                              setValue('allowancePolicy.allowanceDaysRule', Array.from(next), { shouldValidate: true });
+                            }}
+                          />
+                        }
+                        label={<Typography variant="body2">{opt.label}</Typography>}
+                        sx={{ mr: 2 }}
+                      />
+                    );
+                  })}
+                </FormGroup>
+                <FormHelperText>用于计算津贴时纳入天数的规则</FormHelperText>
+              </Grid>
               <Grid size={12}>
                 <FormControl
                   fullWidth
@@ -747,7 +784,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                 <Grid size={12}>
                   <Box mb={2}>
                     <Typography variant="subtitle2" gutterBottom>
-                      条件规则描述 (Condition Rules)
+                      补差条件规则描述 (Condition Rules)
                     </Typography>
 
                     {(getValues('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc') || []).map((rule: string, index: number) => (
@@ -780,30 +817,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                     >
                       添加条件规则 (Add Condition Rule)
                     </Button>
-                  </Box>
-                </Grid>
-              )}
-
-              {forceCompensationValue === 'Only if' && (
-                <Grid size={12}>
-                  <Box mb={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      规则描述 (Rule Description)
-                    </Typography>
-                    <TextField
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      placeholder="输入规则描述"
-                      {...register('allowancePolicy.differenceCompensationRule.ruleDescription')}
-                      error={!!errors.allowancePolicy?.differenceCompensationRule?.ruleDescription}
-                      helperText={
-                        errors.allowancePolicy?.differenceCompensationRule?.ruleDescription?.message ||
-                        '此描述将作为一般规则说明'
-                      }
-                    />
                   </Box>
                 </Grid>
               )}

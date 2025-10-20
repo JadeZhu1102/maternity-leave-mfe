@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -28,6 +28,7 @@ interface MonthViewDialogProps {
   days: CalendarDay[];
   onUpdateDay?: (date: string, updates: Partial<CalendarDay>) => void;
   isEditMode?: boolean;
+  initialSelectedDate?: string | null;
 }
 
 const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
@@ -38,14 +39,15 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
   days,
   onUpdateDay,
   isEditMode = false,
+  initialSelectedDate = null,
 }) => {
 
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
   const [dayType, setDayType] = useState<'holiday' | 'workday' | 'normal'>('normal');
   const [description, setDescription] = useState<string>('');
 
-  // Get all days in the month
-  const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
+  // Get all days in the month (use native Date to avoid string parsing issues)
+  const daysInMonth = dayjs(new Date(year, month - 1, 1)).daysInMonth();
   const monthDays = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -55,6 +57,21 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
       }
     );
   });
+
+  // 当提供 initialSelectedDate 时，自动选中该日期
+  useEffect(() => {
+    if (!open || !initialSelectedDate) return;
+    const d = monthDays.find(d => d.date === initialSelectedDate);
+    if (d) {
+      setSelectedDay(d);
+      setDayType(
+        d.isWorkday === false ? 'holiday' :
+        d.isWorkday === true ? 'workday' :
+        'normal'
+      );
+      setDescription(d.description || '');
+    }
+  }, [open, initialSelectedDate, monthDays]);
 
   const handleDayClick = (day: CalendarDay) => {
     if (!isEditMode) {
@@ -185,7 +202,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
                       : isAdjustedWorkday 
                         ? 'warning.light'
                         : isWeekend 
-                          ? 'action.hover' 
+                          ? 'success.light' 
                           : 'background.paper',
                     '&:hover': isEditMode ? {
                       boxShadow: 2,
@@ -203,7 +220,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
                       : isAdjustedWorkday
                         ? 'warning.contrastText'
                         : isWeekend 
-                          ? 'text.secondary' 
+                          ? 'success.dark' 
                           : 'text.primary'}
                   >
                     {dayjs(day.date).date()}
@@ -239,7 +256,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
               <Typography variant="caption">调班</Typography>
             </Box>
             <Box display="flex" alignItems="center">
-              <Box width={16} height={16} bgcolor="action.hover" mr={1} borderRadius={1} />
+              <Box width={16} height={16} bgcolor="success.light" mr={1} borderRadius={1} />
               <Typography variant="caption">周末</Typography>
             </Box>
             <Box display="flex" alignItems="center">
