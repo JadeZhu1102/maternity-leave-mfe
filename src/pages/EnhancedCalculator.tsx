@@ -34,6 +34,10 @@ import {
   Snackbar,
   Checkbox,
   FormControlLabel,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
 } from '@mui/material';
 import {
   CalendarMonth as CalendarIcon,
@@ -223,11 +227,18 @@ const EnhancedCalculator: React.FC = () => {
 
     try {
       // 第一步：计算产假日期
+      // 仅将“难产/其他延长”规则码放入列表；流产规则单独通过 abortionCode 传递
       const selectedRuleCodes = [
         state.selectedDystociaRuleCode,
-        state.selectedAbortionRuleCode,
         state.selectedOtherExtendedRuleCode,
       ].filter((c): c is string => !!c && c.length > 0);
+      const abortionCode = state.selectedAbortionRuleCode || undefined;
+
+      // 动态天数映射：当前按需支持流产规则的可变天数
+      const dynamicLeaveDaysMap: Record<string, number> = {};
+      if (abortionCode && state.selectedAbortionRuleDays != null && !isNaN(state.selectedAbortionRuleDays)) {
+        dynamicLeaveDaysMap[abortionCode] = state.selectedAbortionRuleDays;
+      }
 
       const dateResponse = await calculateLeaveDates({
         staffName: state.staffName || '员工',
@@ -244,10 +255,12 @@ const EnhancedCalculator: React.FC = () => {
         ectopicPregnancy: false,
         recommendAbortionLeaveDays: 0,
         dystociaCodeList: selectedRuleCodes,
+        abortionCode,
+        dynamicLeaveDaysMap: Object.keys(dynamicLeaveDaysMap).length ? dynamicLeaveDaysMap : undefined,
       });
 
-      // 第二步：如果填写了社保信息，计算生育津贴
-      if (state.socialSecurityBase > 0 || state.companyBase > 0) {
+      // 第二步：如果未选择流产且填写了社保信息，计算生育津贴
+      if (!state.isAbortion && (state.socialSecurityBase > 0 || state.companyBase > 0)) {
         const allowanceResponse = await calculateAllowance({
           // From DateCalculateRequest
           staffName: state.staffName || '员工',
@@ -263,15 +276,13 @@ const EnhancedCalculator: React.FC = () => {
           ectopicPregnancy: false,
           recommendAbortionLeaveDays: 0,
           dystociaCodeList: selectedRuleCodes,
+          abortionCode,
+          dynamicLeaveDaysMap: Object.keys(dynamicLeaveDaysMap).length ? dynamicLeaveDaysMap : undefined,
           
           // Additional fields in AllowanceCalculateRequest
           leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
           leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
-          leaveDetail: {
-            leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
-            leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
-            currentLeaveDays: dateResponse.leaveDetail.currentLeaveDays,
-          },
+          leaveDetail: dateResponse.leaveDetail,
           averageSalary: state.socialSecurityBase > 0 ? state.socialSecurityBase : null,
           currentSalary: state.companyBase > 0 ? state.companyBase : null,
           hitForceCompensationRule: true
@@ -614,27 +625,53 @@ const EnhancedCalculator: React.FC = () => {
                     ) : null;
                   })()}
 
-                  {/* 流产规则选择 */}
-                  {state.birthType === 'abortion' && policyData?.abortionRules && policyData.abortionRules.length > 0 && (
-                    <TextField
-                      fullWidth
-                      select
-                      label="流产规则"
-                      value={state.selectedAbortionRuleCode || ''}
-                      onChange={(e) => setState({ ...state, selectedAbortionRuleCode: e.target.value })}
-                      helperText="请选择适用的流产规则"
-                    >
-                      {policyData.abortionRules.map((rule) => (
-                        <MenuItem key={rule.ruleCode} value={rule.ruleCode}>
-                          {rule.description}{rule.leaveDays ? `（${rule.leaveDays}天）` : ''}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  )}
+                  {/* 流产规则选择（单选） */}
+                  {(() => {
+                    const rules = policyData?.abortionPolicy?.abortionRules || policyData?.abortionRules || [];
+                    return state.birthType === 'abortion' && rules.length > 0 ? (
+                    <FormControl component="fieldset" fullWidth>
+                      <FormLabel component="legend">流产情况说明</FormLabel>
+                      <RadioGroup
+                        value={state.selectedAbortionRuleCode || ''}
+                        onChange={(e) => setState({ ...state, selectedAbortionRuleCode: e.target.value })}
+                        sx={{ gap: 0.5 }}
+                      >
+                        {rules.map((rule) => {
+                          const hasFixed = rule.leaveDays !== null && rule.leaveDays !== undefined;
+                          const rangeText = `${rule.minLeaveDays ?? 0}${rule.maxLeaveDays != null ? ` - ${rule.maxLeaveDays}` : ''} 天可选`;
+                          const labelText = hasFixed
+                            ? `${rule.description}（${rule.leaveDays}天）`
+                            : `${rule.description}（${rangeText}）`;
+                          return (
+                            <FormControlLabel
+                              key={rule.ruleCode}
+                              value={rule.ruleCode}
+                              control={<Radio size="small" />}
+                              sx={{ alignItems: 'flex-start', m: 0 }}
+                              label={
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {labelText}
+                                </Typography>
+                              }
+                            />
+                          );
+                        })}
+                      </RadioGroup>
+                    </FormControl>
+                    ) : null;
+                  })()}
 
                   {/* 流产规则自定义天数输入 */}
                   {state.birthType === 'abortion' && state.selectedAbortionRuleCode && (() => {
-                    const rule = policyData?.abortionRules?.find(r => r.ruleCode === state.selectedAbortionRuleCode);
+                    const rules = policyData?.abortionPolicy?.abortionRules || policyData?.abortionRules || [];
+                    const rule = rules.find(r => r.ruleCode === state.selectedAbortionRuleCode);
                     return rule && (rule.leaveDays === null || rule.leaveDays === undefined) ? (
                       <TextField
                         fullWidth
@@ -690,96 +727,62 @@ const EnhancedCalculator: React.FC = () => {
                     ) : null;
                   })()}
 
-                  {/* 流产详情 */}
-                  {state.isAbortion && (
+                  
+
+                  {/* 多胎选择（流产时隐藏） */}
+                  {state.birthType !== 'abortion' && (
                     <Box>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="怀孕周数"
-                        value={state.abortionWeeks}
-                        onChange={(e) => setState({ ...state, abortionWeeks: parseInt(e.target.value) || 0 })}
-                        inputProps={{ min: 0, max: 40 }}
-                        helperText="请输入流产时的怀孕周数"
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={state.isMultipleBirth}
+                            onChange={(e) => setState({ ...state, isMultipleBirth: e.target.checked })}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant="body2">是否多胎</Typography>
+                            {policyData?.moreInfantPolicy?.extraInfantLeaveDays && (
+                              <Typography variant="caption" color="text.secondary">
+                                每多一个婴儿增加{policyData.moreInfantPolicy.extraInfantLeaveDays}天
+                              </Typography>
+                            )}
+                          </Box>
+                        }
                       />
-                      {policyData?.abortionPolicy && (
-                        <Alert severity="info" sx={{ mt: 2 }}>
-                          <Typography variant="body2">
-                            流产假期规定：
-                          </Typography>
-                          <Typography variant="caption" component="div">
-                            • 怀孕不满4个月：{policyData.abortionPolicy.earlyPregnancyLeave}天<br />
-                            • 怀孕满4个月：{policyData.abortionPolicy.midTermPregnancyLeave}天<br />
-                            • 怀孕满7个月：{policyData.abortionPolicy.latePregnancyLeave}天
-                          </Typography>
-                          {policyData.abortionPolicy.description && (
-                            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                              {policyData.abortionPolicy.description}
-                            </Typography>
-                          )}
-                        </Alert>
+                      {state.isMultipleBirth && (
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="婴儿数量"
+                          value={state.infantNumber}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (!isNaN(value) && value >= 2) {
+                              setState({ ...state, infantNumber: value });
+                            } else if (e.target.value === '') {
+                              setState({ ...state, infantNumber: 2 });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            if (e.target.value === '') {
+                              setState({ ...state, infantNumber: 2 });
+                            }
+                          }}
+                          inputProps={{ min: 2, step: 1 }}
+                          helperText="选择多胎后请输入婴儿数量（至少2）"
+                          sx={{ mt: 1 }}
+                        />
                       )}
                     </Box>
                   )}
+                  {state.isMultipleBirth && policyData?.moreInfantPolicy?.extraInfantLeaveDays && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      共增加{(state.infantNumber - 1) * policyData.moreInfantPolicy.extraInfantLeaveDays}天
+                    </Typography>
+                  )}
 
-                  {/* 多胎选择 */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={state.isMultipleBirth}
-                          onChange={(e) => setState({ ...state, isMultipleBirth: e.target.checked })}
-                        />
-                      }
-                      label={
-                        <Box>
-                          <Typography variant="body2">是否多胎</Typography>
-                          {policyData?.moreInfantPolicy?.extraInfantLeaveDays && (
-                            <Typography variant="caption" color="text.secondary">
-                              每多一个婴儿增加{policyData.moreInfantPolicy.extraInfantLeaveDays}天
-                            </Typography>
-                          )}
-                        </Box>
-                      }
-                    />
-                    {state.isMultipleBirth && (
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="婴儿数量"
-                        value={state.infantNumber}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (!isNaN(value) && value >= 2) {
-                            setState({ ...state, infantNumber: value });
-                          } else if (e.target.value === '') {
-                            setState({ ...state, infantNumber: 2 });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (e.target.value === '') {
-                            setState({ ...state, infantNumber: 2 });
-                          }
-                        }}
-                        inputProps={{ min: 2, max: 5, step: 1 }}
-                        sx={{ mt: 1 }}
-                        helperText={policyData?.moreInfantPolicy?.extraInfantLeaveDays ? `共增加${(state.infantNumber - 1) * policyData.moreInfantPolicy.extraInfantLeaveDays}天` : '请选择婴儿数量'}
-                      />
-                    )}
-                  </Box>
-
-                  {/* 分娩顺序 */}
-                  <TextField
-                    fullWidth
-                    select
-                    label="分娩顺序"
-                    value={state.deliverySequence}
-                    onChange={(e) => setState({ ...state, deliverySequence: parseInt(e.target.value) })}
-                  >
-                    <MenuItem value={1}>第一胎</MenuItem>
-                    <MenuItem value={2}>第二胎</MenuItem>
-                    <MenuItem value={3}>第三胎及以上</MenuItem>
-                  </TextField>
+              
                 </Stack>
               </CardContent>
             </Card>
@@ -789,7 +792,7 @@ const EnhancedCalculator: React.FC = () => {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Box display="flex" alignItems="center">
                   <Typography variant="h6" fontWeight={600}>
-                    社保信息（可选）
+                    员工工资信息（可选）
                   </Typography>
                   <Chip label="用于计算生育津贴" size="small" sx={{ ml: 2 }} />
                 </Box>
@@ -811,39 +814,26 @@ const EnhancedCalculator: React.FC = () => {
                   <TextField
                     fullWidth
                     type="number"
-                    label="社保缴费基数"
+                    label="月平均工资"
                     value={state.socialSecurityBase || ''}
                     onChange={(e) => setState({ ...state, socialSecurityBase: parseFloat(e.target.value) || 0 })}
                     InputProps={{
                       startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
                     }}
-                    helperText="单位上年度职工月平均工资"
+                    helperText="过去12个月该员工月平均工资"
                   />
 
                   <TextField
                     fullWidth
                     type="number"
-                    label="公司实际工资基数"
+                    label="当前月薪"
                     value={state.companyBase || ''}
                     onChange={(e) => setState({ ...state, companyBase: parseFloat(e.target.value) || 0 })}
                     InputProps={{
                       startAdornment: <Typography sx={{ mr: 1 }}>¥</Typography>,
                     }}
-                    helperText="用于计算公司补差（如果高于社保基数）"
+                    helperText="该员工当前月薪"
                   />
-
-                  {state.socialSecurityBase > 0 && (
-                    <Alert severity="info">
-                      <Typography variant="body2">
-                        生育津贴 = 社保基数 ÷ 30 × 产假天数
-                      </Typography>
-                      {state.companyBase > state.socialSecurityBase && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          公司补差 = (公司基数 - 社保基数) ÷ 30 × 产假天数
-                        </Typography>
-                      )}
-                    </Alert>
-                  )}
                 </Stack>
               </AccordionDetails>
             </Accordion>
@@ -910,15 +900,7 @@ const EnhancedCalculator: React.FC = () => {
                       ) : null;
                     })()}
 
-                    <Box>
-                      <Typography variant="subtitle2" color="primary" gutterBottom>
-                        总产假天数
-                      </Typography>
-                      <Typography variant="h5" color="success.main" fontWeight={600}>
-                        {policyData.maxLeaveDays}天
-                      </Typography>
-                    </Box>
-
+                
                     <Divider />
 
                     <Box>
@@ -931,9 +913,7 @@ const EnhancedCalculator: React.FC = () => {
                       <Typography variant="body2">
                         • 多胎：+{policyData.moreInfantPolicy.extraInfantLeaveDays}天/胎
                       </Typography>
-                      <Typography variant="body2">
-                        • 陪产假：{policyData.paternityLeavePolicy?.leaveDays || 0}天
-                      </Typography>
+                    
                     </Box>
                   </Stack>
                 </CardContent>

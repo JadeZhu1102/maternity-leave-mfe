@@ -4,6 +4,7 @@ import { CreatePolicyPayload } from '../../../types/policyApi';
 import {
   TextField,
   FormControl,
+  FormGroup,
   InputLabel,
   Select,
   MenuItem,
@@ -14,7 +15,9 @@ import {
   CardContent,
   CardHeader,
   FormHelperText,
-  Box
+  Box,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import AddIcon from '@mui/icons-material/Add';
@@ -384,6 +387,25 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                     )}
                   />
                 </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <Controller
+                    name={"otherExtendedPolicy.delayForPublicHoliday" as const}
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl size="small" sx={{ width: 180 }}>
+                        <InputLabel>公共假期顺延</InputLabel>
+                        <Select
+                          label="公共假期顺延"
+                          value={field.value ? 'true' : 'false'}
+                          onChange={(e) => field.onChange(e.target.value === 'true')}
+                        >
+                          <MenuItem value="true">是</MenuItem>
+                          <MenuItem value="false">否</MenuItem>
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                </Grid>
               </Grid>
             </CardContent>
           </SectionCard>
@@ -411,25 +433,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
           />
           <CardContent>
             <Grid container spacing={2} sx={{ mb: 2 }}>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Controller
-                  name={"abortionPolicy.delayForPublicHoliday" as const}
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl size="small" sx={{ width: 180 }}>
-                      <InputLabel>公共假期顺延</InputLabel>
-                      <Select
-                        label="公共假期顺延"
-                        value={field.value ? 'true' : 'false'}
-                        onChange={(e) => field.onChange(e.target.value === 'true')}
-                      >
-                        <MenuItem value="true">是</MenuItem>
-                        <MenuItem value="false">否</MenuItem>
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-              </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <Controller
                   name={"abortionPolicy.calendarDay" as const}
@@ -483,20 +486,90 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
-                      label="休假天数"
-                      type="number"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      {...register(`abortionPolicy.abortionRules.${index}.leaveDays` as const, {
-                        valueAsNumber: true,
-                        required: '必填',
-                      })}
-                      error={!!errors.abortionPolicy?.abortionRules?.[index]?.leaveDays}
-                      helperText={errors.abortionPolicy?.abortionRules?.[index]?.leaveDays?.message}
-                    />
+                    <FormControl fullWidth size="small">
+                      <InputLabel>是否为固定休假天数</InputLabel>
+                      <Select
+                        label="是否为固定休假天数"
+                        value={
+                          (getValues(`abortionPolicy.abortionRules.${index}.leaveDays` as const) ?? null) !== null
+                            ? 'fixed'
+                            : 'range'
+                        }
+                        onChange={(e) => {
+                          const mode = e.target.value;
+                          if (mode === 'fixed') {
+                            // 默认设为0天，清空范围
+                            setValue(`abortionPolicy.abortionRules.${index}.leaveDays` as const, 0 as any, { shouldValidate: true });
+                            setValue(`abortionPolicy.abortionRules.${index}.minLeaveDays` as const, null as any);
+                            setValue(`abortionPolicy.abortionRules.${index}.maxLeaveDays` as const, null as any);
+                          } else {
+                            // 设为范围模式，leaveDays 置为 null
+                            setValue(`abortionPolicy.abortionRules.${index}.leaveDays` as const, null as any, { shouldValidate: true });
+                          }
+                        }}
+                      >
+                        <MenuItem value="fixed">是（固定天数）</MenuItem>
+                        <MenuItem value="range">否（范围天数）</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
+                  {(() => {
+                    const ld = getValues(`abortionPolicy.abortionRules.${index}.leaveDays` as const) as any;
+                    const isFixed = ld !== null && ld !== undefined;
+                    return isFixed ? (
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <TextField
+                          label="休假天数"
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          {...register(`abortionPolicy.abortionRules.${index}.leaveDays` as const, {
+                            valueAsNumber: true,
+                            required: '必填',
+                            min: { value: 0, message: '不能小于0' }
+                          })}
+                          error={!!errors.abortionPolicy?.abortionRules?.[index]?.leaveDays}
+                          helperText={errors.abortionPolicy?.abortionRules?.[index]?.leaveDays?.message}
+                        />
+                      </Grid>
+                    ) : (
+                      <>
+                        <Grid size={{ xs: 12, sm: 2 }}>
+                          <TextField
+                            label="最小休假天数"
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                            {...register(`abortionPolicy.abortionRules.${index}.minLeaveDays` as const, {
+                              valueAsNumber: true,
+                              required: '必填',
+                              min: { value: 0, message: '不能小于0' }
+                            })}
+                            error={!!errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays}
+                            helperText={errors.abortionPolicy?.abortionRules?.[index]?.minLeaveDays?.message}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 2 }}>
+                          <TextField
+                            label="最大休假天数"
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                            {...register(`abortionPolicy.abortionRules.${index}.maxLeaveDays` as const, {
+                              valueAsNumber: true,
+                              required: '必填',
+                              min: { value: 0, message: '不能小于0' }
+                            })}
+                            error={!!errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays}
+                            helperText={errors.abortionPolicy?.abortionRules?.[index]?.maxLeaveDays?.message}
+                          />
+                        </Grid>
+                      </>
+                    );
+                  })()}
                 </Grid>
               </Box>
             ))}
@@ -636,56 +709,6 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                 />
               </Grid>
               <Grid size={12}>
-                <Typography variant="subtitle2" gutterBottom>津贴天数规则</Typography>
-                {(getValues('allowancePolicy.allowanceDaysRule') || []).map((_, index: number) => (
-                  <Box key={index} display="flex" alignItems="center" mb={1}>
-                    <Controller
-                      name={`allowancePolicy.allowanceDaysRule.${index}` as const}
-                      control={control}
-                      render={({ field }) => (
-                        <FormControl size="small" sx={{ minWidth: 240 }}>
-                          <InputLabel>规则类型</InputLabel>
-                          <Select
-                            {...field}
-                            label="规则类型"
-                          >
-                            <MenuItem value="statutory">标准</MenuItem>
-                            <MenuItem value="dystocia">难产假</MenuItem>
-                            <MenuItem value="otherExtended">奖励假</MenuItem>
-                            <MenuItem value="abortion">流产假</MenuItem>
-                          </Select>
-                        </FormControl>
-                      )}
-                    />
-                    <IconButton
-                      onClick={() => {
-                        const list = [...(getValues('allowancePolicy.allowanceDaysRule') || [])];
-                        list.splice(index, 1);
-                        setValue('allowancePolicy.allowanceDaysRule', list, { shouldValidate: true });
-                      }}
-                      size="small"
-                      color="error"
-                      sx={{ ml: 1 }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    const list = [...(getValues('allowancePolicy.allowanceDaysRule') || [])];
-                    list.push('statutory');
-                    setValue('allowancePolicy.allowanceDaysRule', list, { shouldValidate: true });
-                  }}
-                  sx={{ mt: 1 }}
-                >
-                  添加规则项
-                </Button>
-              </Grid>
-              <Grid xs={12}>
                 <FormControl
                   fullWidth
                   size="small"

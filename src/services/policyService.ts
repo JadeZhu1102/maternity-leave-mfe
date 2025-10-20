@@ -26,9 +26,10 @@ export interface MoreInfantPolicy {
 }
 
 export interface AbortionPolicy {
-  earlyPregnancyLeave: number;
-  midTermPregnancyLeave: number;
-  latePregnancyLeave: number;
+  delayForPublicHoliday: boolean;
+  calendarDay: boolean;
+  /** 后端返回的规则列表 */
+  abortionRules?: PolicyRuleItem[];
   description?: string;
 }
 
@@ -112,8 +113,18 @@ export const fetchPolicyByCity = async (cityCode: string): Promise<PolicyData> =
     const response = await axios.get<PolicyData>(`${API_BASE_URL}/api/v1/policy/fetch`, {
       params: { cityCode }
     });
-    console.log('[API] Fetched policy for city:', cityCode, response.data);
-    return response.data;
+    // Normalize abortionRules to top-level if backend nests it under abortionPolicy
+    const d: any = response.data as any;
+    const normalized: PolicyData = {
+      ...response.data,
+      abortionRules: (d?.abortionRules && Array.isArray(d.abortionRules))
+        ? d.abortionRules
+        : (d?.abortionPolicy?.abortionRules && Array.isArray(d.abortionPolicy.abortionRules))
+          ? d.abortionPolicy.abortionRules
+          : [],
+    };
+    console.log('[API] Fetched policy for city (normalized):', cityCode, normalized);
+    return normalized;
   } catch (error) {
     console.error('Failed to fetch policy data from API:', error);
     

@@ -176,6 +176,8 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
   const filteredPolicies = policies.filter(policy =>
     (policy.cityName ?? '').toLowerCase().includes(normalizedTerm)
   );
+  // 默认按 cityCode 升序排序
+  const sortedPolicies = [...filteredPolicies].sort((a, b) => (a.cityCode || '').localeCompare(b.cityCode || ''));
 
   return (
     <div className="space-y-6">
@@ -252,9 +254,6 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
                     法定产假
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    最长产假
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     难产假
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -272,7 +271,7 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPolicies.map((policy) => (
+                {sortedPolicies.map((policy) => (
                   <tr key={policy.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -292,13 +291,7 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        {policy.maxLeaveDays != null && (
-                          <span className="text-sm text-gray-900">{policy.maxLeaveDays} 天</span>
-                        )}
-                      </div>
-                    </td>
+                    
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">{policy.dystociaPolicy.standardLeaveDays} 天</span>

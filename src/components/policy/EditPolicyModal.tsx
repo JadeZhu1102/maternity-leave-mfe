@@ -60,7 +60,9 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
             ? policy.abortionPolicy.abortionRules.map((r: any) => ({
                 ruleCode: r.ruleCode,
                 description: r.description,
-                leaveDays: r.leaveDays ?? 0,
+                leaveDays: r.leaveDays ?? null,
+                minLeaveDays: r.minLeaveDays ?? null,
+                maxLeaveDays: r.maxLeaveDays ?? null,
               }))
             : [],
         },
@@ -123,11 +125,16 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
         abortionPolicy: {
           delayForPublicHoliday: !!data.abortionPolicy.delayForPublicHoliday,
           calendarDay: !!data.abortionPolicy.calendarDay,
-          abortionRules: (data.abortionPolicy.abortionRules || []).map(r => ({
-            ruleCode: r.ruleCode,
-            description: r.description,
-            leaveDays: Number(r.leaveDays) || 0,
-          })),
+          abortionRules: (data.abortionPolicy.abortionRules || []).map(r => {
+            const isFixed = r.leaveDays !== null && r.leaveDays !== undefined;
+            return {
+              ruleCode: r.ruleCode,
+              description: r.description,
+              leaveDays: isFixed ? Number(r.leaveDays) : null,
+              minLeaveDays: !isFixed ? (r.minLeaveDays != null ? Number(r.minLeaveDays) : null) : null,
+              maxLeaveDays: !isFixed ? (r.maxLeaveDays != null ? Number(r.maxLeaveDays) : null) : null,
+            };
+          }),
         },
         allowancePolicy: {
           corpSalaryDetailList: (data.allowancePolicy.corpSalaryDetailList || []).map(r => ({
@@ -147,8 +154,18 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({
         },
       };
 
+      // Backend expects otherExtendedPolicy.standardLeaveDays
+      const postData = {
+        ...payload,
+        otherExtendedPolicy: {
+          standardLeaveDays: payload.otherExtendedPolicy.leaveDays,
+          delayForPublicHoliday: payload.otherExtendedPolicy.delayForPublicHoliday,
+          calendarDay: payload.otherExtendedPolicy.calendarDay,
+        },
+      } as any;
+
       // Call the API to update the policy
-      await axios.post(`${API_BASE_URL}/api/v1/policy/update`, payload);
+      await axios.post(`${API_BASE_URL}/api/v1/policy/update`, postData);
       
       enqueueSnackbar('政策更新成功', { variant: 'success' });
       

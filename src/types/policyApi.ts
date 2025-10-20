@@ -30,7 +30,9 @@ export interface OtherExtendedPolicy {
 export interface AbortionRule {
   ruleCode: string;
   description: string;
-  leaveDays: number;
+  leaveDays: number | null;
+  minLeaveDays?: number | null;
+  maxLeaveDays?: number | null;
 }
 
 export interface AbortionPolicy {

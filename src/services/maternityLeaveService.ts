@@ -18,6 +18,9 @@ export interface DateCalculateRequest {
   ectopicPregnancy: boolean;
   recommendAbortionLeaveDays: number;
   dystociaCodeList: string[];
+  abortionCode?: string;
+  /** 可变天数规则的用户输入映射，key为规则code，value为天数 */
+  dynamicLeaveDaysMap?: Record<string, number>;
 }
 
 export interface AllowanceCalculateRequest extends Omit<DateCalculateRequest, 'leaveStartDate'> {
@@ -43,6 +46,12 @@ export interface CalculateResponse {
     leaveStartDate: string;
     leaveEndDate: string;
     currentLeaveDays: number;
+    abortionLeaveDays: number;
+    statutoryLeaveDays: number;
+    dystociaLeaveDays: number;
+    moreInfantLeaveDays: number;
+    otherExtendedLeaveDays: number;
+    totalLeaveDays: number;
   };
   calculateComments: {
     descriptionList: string[];
