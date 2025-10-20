@@ -26,6 +26,8 @@ export interface AllowanceCalculateRequest extends Omit<DateCalculateRequest, 'l
   averageSalary: number | null;
   currentSalary: number | null;
   hitForceCompensationRule: boolean;
+  // Also pass calculated leave detail for backend reference
+  leaveDetail?: CalculateResponse['leaveDetail'];
 }
 
 export interface CalculateResponse {

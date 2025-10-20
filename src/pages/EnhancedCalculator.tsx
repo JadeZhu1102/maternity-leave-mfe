@@ -267,6 +267,11 @@ const EnhancedCalculator: React.FC = () => {
           // Additional fields in AllowanceCalculateRequest
           leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
           leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
+          leaveDetail: {
+            leaveStartDate: dateResponse.leaveDetail.leaveStartDate,
+            leaveEndDate: dateResponse.leaveDetail.leaveEndDate,
+            currentLeaveDays: dateResponse.leaveDetail.currentLeaveDays,
+          },
           averageSalary: state.socialSecurityBase > 0 ? state.socialSecurityBase : null,
           currentSalary: state.companyBase > 0 ? state.companyBase : null,
           hitForceCompensationRule: true

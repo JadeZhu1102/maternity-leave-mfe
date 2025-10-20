@@ -68,11 +68,16 @@ export function PolicyManagement() {
       // 调用真实API获取所有政策
       const apiPolicies = await getAllPolicies();
       
-      // 将API数据转换为组件需要的格式，并添加数字ID
-      const formattedPolicies: CityPolicy[] = apiPolicies.map((policy, index) => ({
-        // 使用索引+1作为临时ID，实际应该使用后端返回的ID
-        id: `temp_${index + 1}`,
-        numericId: index + 1, // 添加数字ID用于删除操作
+      // 将API数据转换为组件需要的格式，并优先使用后端返回的ID
+      const formattedPolicies: CityPolicy[] = apiPolicies.map((policy, index) => {
+        // 兼容不同的后端ID字段命名
+        const backendId = Number((policy as any).id ?? (policy as any).policyId ?? (policy as any).policyID);
+        const numericId = Number.isFinite(backendId) ? backendId : (index + 1);
+
+        return {
+        // 使用后端ID（若存在）作为主键字符串，避免与临时ID混淆
+        id: Number.isFinite(backendId) ? String(backendId) : `temp_${index + 1}`,
+        numericId, // 删除操作使用的数值ID
         cityCode: policy.cityCode,
         cityName: policy.cityName,
         statutoryPolicy: {
@@ -106,7 +111,8 @@ otherExtendedPolicy: policy.otherExtendedPolicy ? {
         createdAt: policy.lastUpdated,
         updatedAt: policy.lastUpdated,
         originalPolicy: policy
-      }));
+      };
+      });
 
       setPolicies(formattedPolicies);
     } catch (error) {
