@@ -149,6 +149,16 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
     setValue('allowancePolicy.differenceCompensationRule.otherCompensationRuleDesc', currentRules, { shouldValidate: true });
   }, [getValues, setValue]);
 
+  // Map backend allowanceDaysRule codes to Chinese labels
+  const getAllowanceRuleLabel = useCallback((code: string): string => {
+    const c = (code || '').toLowerCase();
+    if (c === 'dystocia' || code === '难产假') return '难产假';
+    if (c === 'statutory' || code === '标准') return '标准';
+    if (c === 'otherextended' || c === 'bonus' || code === '奖励假') return '奖励假';
+    if (c === 'abortion' || code === '流产假') return '流产假';
+    return code || '未知规则';
+  }, []);
+
   const onSubmitHandler: SubmitHandler<CreatePolicyPayload> = useCallback(async (data) => {
     await onSubmit(data);
   }, [onSubmit]);
@@ -626,20 +636,26 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                 />
               </Grid>
               <Grid size={12}>
-                <Typography variant="subtitle2" gutterBottom>津贴天数规则（数组）</Typography>
-                {(getValues('allowancePolicy.allowanceDaysRule') || []).map((rule: string, index: number) => (
+                <Typography variant="subtitle2" gutterBottom>津贴天数规则</Typography>
+                {(getValues('allowancePolicy.allowanceDaysRule') || []).map((_, index: number) => (
                   <Box key={index} display="flex" alignItems="center" mb={1}>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      value={rule}
-                      onChange={(e) => {
-                        const list = [...(getValues('allowancePolicy.allowanceDaysRule') || [])];
-                        list[index] = e.target.value;
-                        setValue('allowancePolicy.allowanceDaysRule', list, { shouldValidate: true });
-                      }}
-                      placeholder="输入津贴天数规则"
+                    <Controller
+                      name={`allowancePolicy.allowanceDaysRule.${index}` as const}
+                      control={control}
+                      render={({ field }) => (
+                        <FormControl size="small" sx={{ minWidth: 240 }}>
+                          <InputLabel>规则类型</InputLabel>
+                          <Select
+                            {...field}
+                            label="规则类型"
+                          >
+                            <MenuItem value="statutory">标准</MenuItem>
+                            <MenuItem value="dystocia">难产假</MenuItem>
+                            <MenuItem value="otherExtended">奖励假</MenuItem>
+                            <MenuItem value="abortion">流产假</MenuItem>
+                          </Select>
+                        </FormControl>
+                      )}
                     />
                     <IconButton
                       onClick={() => {
@@ -661,7 +677,7 @@ export const PolicyForm: React.FC<PolicyFormProps> = ({
                   startIcon={<AddIcon />}
                   onClick={() => {
                     const list = [...(getValues('allowancePolicy.allowanceDaysRule') || [])];
-                    list.push('');
+                    list.push('statutory');
                     setValue('allowancePolicy.allowanceDaysRule', list, { shouldValidate: true });
                   }}
                   sx={{ mt: 1 }}
