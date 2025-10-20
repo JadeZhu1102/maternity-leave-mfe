@@ -276,7 +276,19 @@ const EnhancedCalculator: React.FC = () => {
           currentSalary: state.companyBase > 0 ? state.companyBase : null,
           hitForceCompensationRule: true
         });
-        setResult(allowanceResponse);
+        // 合并结果：保留产假（日期）结果，叠加津贴结果，合并备注并去重
+        const mergedComments = Array.from(new Set([
+          ...((dateResponse.calculateComments?.descriptionList) || []),
+          ...((allowanceResponse.calculateComments?.descriptionList) || []),
+        ]));
+
+        const mergedResult = {
+          leaveDetail: dateResponse.leaveDetail,
+          allowanceDetail: allowanceResponse.allowanceDetail,
+          calculateComments: { descriptionList: mergedComments },
+        } as CalculateResponse;
+
+        setResult(mergedResult);
       } else {
         setResult(dateResponse);
       }
