@@ -149,7 +149,7 @@ export const getAllPolicies = async (): Promise<PolicyData[]> => {
   // }
 
   try {
-    const response = await axios.get<PolicyData[]>(`${API_BASE_URL}/api/v1/policy/all`);
+    const response = await axios.get<PolicyData[]>(`${API_BASE_URL}/api/v1/policy/getAllPolicy`);
     console.log('[API] Fetched all policies:', response.data);
     return response.data;
   } catch (error) {
@@ -167,5 +167,19 @@ export const getAllPolicies = async (): Promise<PolicyData[]> => {
     //   throw new Error('Failed to load policies');
     // }
     throw new Error('Failed to load policies');
+  }
+};
+
+/**
+ * 删除政策
+ * @param id 政策ID (numeric)
+ */
+export const deletePolicy = async (id: number): Promise<void> => {
+  try {
+    await axios.delete(`${API_BASE_URL}/api/v1/policy/delete/${id}`);
+    console.log(`[API] Deleted policy with ID: ${id}`);
+  } catch (error) {
+    console.error('Failed to delete policy:', error);
+    throw new Error(`Failed to delete policy with ID: ${id}`);
   }
 };

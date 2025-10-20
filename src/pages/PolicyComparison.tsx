@@ -54,7 +54,8 @@ const PolicyComparison: React.FC<PolicyComparisonProps> = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   // 获取城市名称的辅助函数
-  const getCityName = (cityCode: string): string => {
+  const getCityName = (cityCode: string | null | undefined): string => {
+    if (!cityCode) return '未知城市';
     const city = SUPPORTED_CITIES.find(c => c.code.toLowerCase() === cityCode.toLowerCase());
     return city?.name || cityCode;
   };
