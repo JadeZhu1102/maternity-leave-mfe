@@ -48,6 +48,12 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
     calendarDays.push(null);
   }
 
+  // Safer weekday computation using native Date from parts
+  const getWeekday = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).getDay();
+  };
+
   const handleDayClick = (day: CalendarDay | null) => {
     if (day && onDayClick) {
       onDayClick(day);
@@ -87,7 +93,7 @@ const CalendarMonth: React.FC<CalendarMonthProps> = ({ year, month, days, onDayC
             return <Box key={`empty-${index}`} />;
           }
 
-          const isWeekend = [0, 6].includes(dayjs(day.date).day());
+          const isWeekend = [0, 6].includes(getWeekday(day.date));
           const isToday = dayjs().format('YYYY-MM-DD') === day.date;
           
           // 判断是否为特殊日期

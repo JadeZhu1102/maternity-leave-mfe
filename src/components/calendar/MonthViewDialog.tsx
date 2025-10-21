@@ -47,7 +47,8 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
   const [description, setDescription] = useState<string>('');
 
   // Get all days in the month (use native Date to avoid string parsing issues)
-  const daysInMonth = dayjs(new Date(year, month - 1, 1)).daysInMonth();
+  const firstDayOfMonth = dayjs(new Date(year, month - 1, 1));
+  const daysInMonth = firstDayOfMonth.daysInMonth();
   const monthDays = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -57,6 +58,25 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
       }
     );
   });
+
+  // Build calendar with leading nulls to align weekdays
+  const firstDayOfWeek = firstDayOfMonth.day();
+  const calendarDays: Array<CalendarDay | null> = [];
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    calendarDays.push(null);
+  }
+  calendarDays.push(...monthDays);
+
+  // Helpers: safer weekday and date object from parts
+  const getWeekday = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).getDay();
+  };
+
+  const getDayjsFromParts = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return dayjs(new Date(y, m - 1, d));
+  };
 
   // 当提供 initialSelectedDate 时，自动选中该日期
   useEffect(() => {
@@ -174,8 +194,11 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
             gap={1}
             sx={{ '& > *': { aspectRatio: '1' } }}
           >
-            {monthDays.map((day) => {
-              const isWeekend = [0, 6].includes(dayjs(day.date).day());
+            {calendarDays.map((day, idx) => {
+              if (!day) {
+                return <Box key={`empty-${idx}`} />;
+              }
+              const isWeekend = [0, 6].includes(getWeekday(day.date));
               const isToday = dayjs().format('YYYY-MM-DD') === day.date;
               const isSelected = selectedDay?.date === day.date;
               
@@ -223,7 +246,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
                           ? 'success.dark' 
                           : 'text.primary'}
                   >
-                    {dayjs(day.date).date()}
+                    {getDayjsFromParts(day.date).date()}
                   </Typography>
                   {day.description && (
                     <Typography 
@@ -284,8 +307,8 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
               bgcolor="background.default"
             >
               <Typography variant="subtitle1" gutterBottom>
-                {dayjs(selectedDay.date).format('YYYY年MM月DD日')} 
-                （周{['日', '一', '二', '三', '四', '五', '六'][dayjs(selectedDay.date).day()]}）
+                {getDayjsFromParts(selectedDay.date).format('YYYY年MM月DD日')} 
+                （周{['日', '一', '二', '三', '四', '五', '六'][getWeekday(selectedDay.date)]}）
               </Typography>
 
               {isEditMode ? (
@@ -303,7 +326,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
                     >
                       <ToggleButton value="normal">
                         <WorkIcon sx={{ mr: 0.5 }} fontSize="small" />
-                        普通日
+                        工作日
                       </ToggleButton>
                       <ToggleButton value="holiday" color="error">
                         <HolidayIcon sx={{ mr: 0.5 }} fontSize="small" />
@@ -354,7 +377,7 @@ const MonthViewDialog: React.FC<MonthViewDialogProps> = ({
                       ) : selectedDay.isWorkday === true ? (
                         <Chip label="调班" color="warning" size="small" sx={{ ml: 1 }} />
                       ) : (
-                        <Chip label="普通日" size="small" sx={{ ml: 1 }} />
+                        <Chip label="工作日" size="small" sx={{ ml: 1 }} />
                       )}
                     </Typography>
                   </Box>
